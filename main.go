@@ -145,19 +145,17 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func addCommand(c BotCmd, aliases ...string) {
+	for _, alias := range aliases {
+		Commands[alias] = c
+	}
+}
+
 func init() {
 	Commands = make(map[string]BotCmd)
-	Commands["waifureg"] = waifuReg
-	Commands["setwaifu"] = waifuReg
-	Commands["husbandoreg"] = waifuReg
-	Commands["sethusbando"] = waifuReg
-	Commands["spousereg"] = waifuReg
-	Commands["setspouse"] = waifuReg
-	Commands["waifu"] = getWaifu
-	Commands["husbando"] = getWaifu
-	Commands["spouse"] = getWaifu
-	Commands["comfort"] = comfort
-	Commands["hug"] = comfort
+	addCommand(waifuReg, "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
+	addCommand(getWaifu, "waifu", "husbando", "spouse")
+	addCommand(comfort, "comfort", "hug")
 	InitGlobal()
 
 	flag.StringVar(&Token, "t", "", "Bot Token")
