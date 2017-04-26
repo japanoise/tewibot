@@ -23,6 +23,7 @@ const (
 )
 
 var Spouse = [...]string{"spouse", "hazubando", "waifu"}
+var Gender = [...]string{"enby", "male", "female"}
 var pa = [...]string{"theirs", "his", "hers"}
 var ps = [...]string{"they", "he", "she"}
 var po = [...]string{"them", "him", "her"}
@@ -133,6 +134,23 @@ func pronouns(user Human, waifu Human, str string) string {
 	return ret
 }
 
+func setGender(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	gen := GenderNeuter
+	if len(words) > 1 {
+		if strings.HasPrefix(strings.ToLower(words[1]), "f") {
+			gen = GenderFemale
+		}
+		if strings.HasPrefix(strings.ToLower(words[1]), "m") {
+			gen = GenderMale
+		}
+	}
+	u := Global.Users[m.Author.ID]
+	u.Gender = gen
+	reply(s, m, fmt.Sprintf("Setting %s' gender to %s", u.Nickname, Gender[gen]))
+}
+
 func comfort(s *discordgo.Session, m *discordgo.MessageCreate) {
 	words := strings.Split(m.Content, " ")
 	var id string
@@ -192,6 +210,7 @@ func init() {
 	addCommand(waifuReg, "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
 	addCommand(getWaifu, "waifu", "husbando", "spouse")
 	addCommand(comfort, "comfort", "hug")
+	addCommand(setGender, "setgender", "genderreg")
 	InitGlobal()
 	InitComforts()
 
