@@ -23,17 +23,33 @@ const (
 )
 
 var Spouse = [...]string{"spouse", "hazubando", "waifu"}
+var pa = [...]string{"theirs", "his", "hers"}
+var ps = [...]string{"they", "he", "she"}
+var po = [...]string{"them", "him", "her"}
+var pp = [...]string{"their", "his", "her"}
+var pr = [...]string{"themself", "himself", "herself"}
+
+type Human interface {
+	GetName() string
+	GetGender() byte
+}
 
 type BotWaifu struct {
 	Name   string
 	Gender byte
 }
 
+func (b *BotWaifu) GetName() string { return b.Name }
+func (b *BotWaifu) GetGender() byte { return b.Gender }
+
 type BotUser struct {
 	Nickname string
 	Gender   byte
 	Waifus   []BotWaifu
 }
+
+func (b *BotUser) GetName() string { return b.Nickname }
+func (b *BotUser) GetGender() byte { return b.Gender }
 
 type BotState struct {
 	Users         map[string]*BotUser
@@ -45,6 +61,7 @@ type BotCmd func(*discordgo.Session, *discordgo.MessageCreate)
 var Global BotState
 
 var Commands map[string]BotCmd
+var Comforts []string
 
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, msg string) {
 	fmt.Printf("me -> %s: %s\n", m.ChannelID, msg)
@@ -97,6 +114,25 @@ func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func pronouns(user Human, waifu Human, str string) string {
+	ug := user.GetGender()
+	wg := waifu.GetGender()
+	ret := str
+	ret = strings.Replace(ret, "%a", pa[ug], -1)
+	ret = strings.Replace(ret, "%wa", pa[wg], -1)
+	ret = strings.Replace(ret, "%s", ps[ug], -1)
+	ret = strings.Replace(ret, "%ws", ps[wg], -1)
+	ret = strings.Replace(ret, "%o", po[ug], -1)
+	ret = strings.Replace(ret, "%wo", po[wg], -1)
+	ret = strings.Replace(ret, "%p", pp[ug], -1)
+	ret = strings.Replace(ret, "%wp", pp[wg], -1)
+	ret = strings.Replace(ret, "%r", pr[ug], -1)
+	ret = strings.Replace(ret, "%wr", pr[wg], -1)
+	ret = strings.Replace(ret, "%n", user.GetName(), -1)
+	ret = strings.Replace(ret, "%wn", waifu.GetName(), -1)
+	return ret
+}
+
 func comfort(s *discordgo.Session, m *discordgo.MessageCreate) {
 	words := strings.Split(m.Content, " ")
 	var id string
@@ -118,7 +154,7 @@ func comfort(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if wifu == nil {
 			reply(s, m, fmt.Sprintf("_cuddles %s close_", name))
 		} else {
-			reply(s, m, fmt.Sprintf("_%s cuddles %s close_", wifu.Name, name))
+			reply(s, m, pronouns(u, wifu, randoms(Comforts)))
 		}
 	}
 }
@@ -157,6 +193,7 @@ func init() {
 	addCommand(getWaifu, "waifu", "husbando", "spouse")
 	addCommand(comfort, "comfort", "hug")
 	InitGlobal()
+	InitComforts()
 
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.Parse()

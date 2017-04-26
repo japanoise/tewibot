@@ -20,6 +20,20 @@ func InitGlobal() {
 	}
 }
 
+func InitComforts() {
+	f, err := os.Open("comforts.json")
+	if err == nil {
+		dec := json.NewDecoder(f)
+		if err = dec.Decode(&Comforts); err != nil {
+			fmt.Println(err.Error(), ", using minimal comforts db for now.")
+			Comforts = []string{"_%wn hugs %n_"}
+		}
+	} else {
+		fmt.Println(err.Error(), ", using minimal comforts db for now.")
+		Comforts = []string{"_%wn hugs %n_"}
+	}
+}
+
 func SaveGlobal() {
 	f, err := os.Create("waifus.json")
 	if err == nil {
