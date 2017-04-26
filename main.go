@@ -23,6 +23,7 @@ const (
 )
 
 var Spouse = [...]string{"spouse", "hazubando", "waifu"}
+var Child = [...]string{"child", "son", "daughter"}
 var Gender = [...]string{"enby", "male", "female"}
 var pa = [...]string{"theirs", "his", "hers"}
 var ps = [...]string{"they", "he", "she"}
@@ -47,6 +48,7 @@ type BotUser struct {
 	Nickname string
 	Gender   byte
 	Waifus   []BotWaifu
+	Children []BotWaifu
 }
 
 func (b *BotUser) GetName() string { return b.Nickname }
@@ -112,6 +114,44 @@ func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 				"According to the databanks, %s's %s is %s",
 				u.Nickname, Spouse[wifu.Gender], wifu.Name))
 		}
+	}
+}
+
+func getFamily(s *discordgo.Session, m *discordgo.MessageCreate) {
+	words := strings.Split(m.Content, " ")
+	var id string
+	var u *BotUser
+	if len(words) > 1 {
+		id = hl2id(words[1])
+	} else {
+		id = m.Author.ID
+	}
+	u = Global.Users[id]
+	if u == nil {
+		reply(s, m, "I've no idea who that is!")
+	} else {
+		wifu := fetchWaifu(u)
+		ret := ""
+		if wifu == nil {
+			ret = fmt.Sprintf("Looks like %s doesn't have a waifu...\n", u.Nickname)
+		} else {
+			ret = fmt.Sprintf(
+				"According to the databanks, %s's %s is %s\n",
+				u.Nickname, Spouse[wifu.Gender], wifu.Name)
+		}
+		if u.Children == nil {
+			ret += fmt.Sprintf("Looks like %s doesn't have any children...", u.Nickname)
+		} else if len(u.Children) == 0 {
+			ret += fmt.Sprintf("Looks like %s doesn't have any children...", u.Nickname)
+		} else {
+			ret += fmt.Sprintf("%s's children are:", u.Nickname)
+			for _, child := range u.Children {
+				ret += fmt.Sprintf(
+					"\n%s %s, %s",
+					pp[u.Gender], Child[child.Gender], child.Name)
+			}
+		}
+		reply(s, m, ret)
 	}
 }
 
@@ -199,6 +239,33 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func addChild(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	gen := GenderFemale
+	if strings.Contains(strings.ToLower(words[0]), "son") {
+		gen = GenderMale
+	}
+	if strings.Contains(strings.ToLower(words[0]), "child") {
+		gen = GenderNeuter
+	}
+	child := Child[gen]
+	if len(words) > 1 {
+		var wname string = strings.Join(words[1:], " ")
+		if Global.Users[m.Author.ID].Children == nil {
+			Global.Users[m.Author.ID].Children = []BotWaifu{
+				BotWaifu{wname, gen},
+			}
+		} else {
+			Global.Users[m.Author.ID].Children = append(
+				Global.Users[m.Author.ID].Children, BotWaifu{wname, gen})
+		}
+		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
+			m.Author.Username, child, wname))
+		fmt.Println(m.Author.ID, child, wname)
+	}
+}
+
 func addCommand(c BotCmd, aliases ...string) {
 	for _, alias := range aliases {
 		Commands[alias] = c
@@ -211,6 +278,8 @@ func init() {
 	addCommand(getWaifu, "waifu", "husbando", "spouse")
 	addCommand(comfort, "comfort", "hug")
 	addCommand(setGender, "setgender", "genderreg")
+	addCommand(addChild, "setchild", "childreg", "setdaughteru", "daughterureg", "setsonfu", "sonfureg")
+	addCommand(getFamily, "family", "getfamily")
 	InitGlobal()
 	InitComforts()
 
