@@ -72,10 +72,6 @@ func reply(s *discordgo.Session, m *discordgo.MessageCreate, msg string) {
 	_, _ = s.ChannelMessageSend(m.ChannelID, msg)
 }
 
-func hl2id(hl string) string {
-	return strings.TrimPrefix(strings.TrimSuffix(hl, ">"), "<@!")
-}
-
 func adduserifne(m *discordgo.MessageCreate) {
 	if Global.Users[m.Author.ID] == nil {
 		ret := new(BotUser)
@@ -95,11 +91,10 @@ func fetchWaifu(u *BotUser) *BotWaifu {
 }
 
 func getGender(s *discordgo.Session, m *discordgo.MessageCreate) {
-	words := strings.Split(m.Content, " ")
 	var id string
 	var u *BotUser
-	if len(words) > 1 {
-		id = hl2id(words[1])
+	if len(m.Mentions) > 0 {
+		id = m.Mentions[0].ID
 	} else {
 		id = m.Author.ID
 	}
@@ -114,11 +109,10 @@ func getGender(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
-	words := strings.Split(m.Content, " ")
 	var id string
 	var u *BotUser
-	if len(words) > 1 {
-		id = hl2id(words[1])
+	if len(m.Mentions) > 0 {
+		id = m.Mentions[0].ID
 	} else {
 		id = m.Author.ID
 	}
@@ -138,11 +132,10 @@ func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func getFamily(s *discordgo.Session, m *discordgo.MessageCreate) {
-	words := strings.Split(m.Content, " ")
 	var id string
 	var u *BotUser
-	if len(words) > 1 {
-		id = hl2id(words[1])
+	if len(m.Mentions) > 0 {
+		id = m.Mentions[0].ID
 	} else {
 		id = m.Author.ID
 	}
@@ -227,13 +220,12 @@ func setGender(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func comfort(s *discordgo.Session, m *discordgo.MessageCreate) {
-	words := strings.Split(m.Content, " ")
 	var id string
 	var name string
 	var u *BotUser
-	if len(words) > 1 {
-		id = hl2id(words[1])
-		name = strings.Join(words[1:], " ")
+	if len(m.Mentions) > 0 {
+		id = m.Mentions[0].ID
+		name = m.Mentions[0].Username
 	} else {
 		id = m.Author.ID
 		name = m.Author.Username
