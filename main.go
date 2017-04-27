@@ -94,6 +94,25 @@ func fetchWaifu(u *BotUser) *BotWaifu {
 	}
 }
 
+func getGender(s *discordgo.Session, m *discordgo.MessageCreate) {
+	words := strings.Split(m.Content, " ")
+	var id string
+	var u *BotUser
+	if len(words) > 1 {
+		id = hl2id(words[1])
+	} else {
+		id = m.Author.ID
+	}
+	u = Global.Users[id]
+	if u == nil {
+		reply(s, m, "I've no idea who that is!")
+	} else {
+		gen := u.Gender
+		reply(s, m, fmt.Sprintf("%s's gender is %s (%s, %s)", u.Nickname, Gender[gen],
+			ps[gen], po[gen]))
+	}
+}
+
 func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 	words := strings.Split(m.Content, " ")
 	var id string
@@ -191,18 +210,20 @@ func nickname(s *discordgo.Session, m *discordgo.MessageCreate) {
 func setGender(s *discordgo.Session, m *discordgo.MessageCreate) {
 	adduserifne(m)
 	words := strings.Split(m.Content, " ")
-	gen := GenderNeuter
+	u := Global.Users[m.Author.ID]
 	if len(words) > 1 {
+		gen := GenderNeuter
 		if strings.HasPrefix(strings.ToLower(words[1]), "f") {
 			gen = GenderFemale
 		}
 		if strings.HasPrefix(strings.ToLower(words[1]), "m") {
 			gen = GenderMale
 		}
+		u.Gender = gen
+		reply(s, m, fmt.Sprintf("Setting %s's gender to %s", u.Nickname, Gender[gen]))
+	} else {
+		reply(s, m, fmt.Sprintf("%s's gender is %s", u.Nickname, Gender[u.Gender]))
 	}
-	u := Global.Users[m.Author.ID]
-	u.Gender = gen
-	reply(s, m, fmt.Sprintf("Setting %s' gender to %s", u.Nickname, Gender[gen]))
 }
 
 func comfort(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -311,6 +332,7 @@ func init() {
 	Commands = make(map[string]BotCmd)
 	Usages = make(map[string]string)
 	addCommand(waifuReg, "Register your waifu with the bot", "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
+	addCommand(getGender, "Print your (or someone else's) gender", "gender", "getgender")
 	addCommand(getWaifu, "Print your (or someone else's) waifu", "waifu", "husbando", "spouse")
 	addCommand(comfort, "Dispense hugs and other niceness", "comfort", "hug")
 	addCommand(setGender, "Set your gender - m, f, x\nThis affects which pronouns the bot will use for you (he, she, they)", "setgender", "genderreg")
