@@ -174,6 +174,19 @@ func pronouns(user Human, waifu Human, str string) string {
 	return ret
 }
 
+func nickname(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	u := Global.Users[m.Author.ID]
+	if len(words) > 1 {
+		newnick := strings.Join(words[1:], " ")
+		reply(s, m, fmt.Sprintf("Setting %s's nickname to %s", u.Nickname, newnick))
+		u.Nickname = newnick
+	} else {
+		reply(s, m, fmt.Sprintf("Your nickname is %s", u.Nickname))
+	}
+}
+
 func setGender(s *discordgo.Session, m *discordgo.MessageCreate) {
 	adduserifne(m)
 	words := strings.Split(m.Content, " ")
@@ -280,6 +293,7 @@ func init() {
 	addCommand(setGender, "setgender", "genderreg")
 	addCommand(addChild, "setchild", "childreg", "setdaughteru", "daughterureg", "setsonfu", "sonfureg")
 	addCommand(getFamily, "family", "getfamily")
+	addCommand(nickname, "nick", "nickname", "setnick", "setnickname")
 	InitGlobal()
 	InitComforts()
 
