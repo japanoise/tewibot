@@ -64,6 +64,7 @@ type BotCmd func(*discordgo.Session, *discordgo.MessageCreate)
 var Global BotState
 
 var Commands map[string]BotCmd
+var Usages map[string]string
 var Comforts []string
 
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, msg string) {
@@ -279,21 +280,44 @@ func addChild(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func addCommand(c BotCmd, aliases ...string) {
+func help(s *discordgo.Session, m *discordgo.MessageCreate) {
+	words := strings.Split(m.Content, " ")
+	if len(words) > 1 {
+		cmd := strings.TrimPrefix(strings.Join(words[1:], " "), Global.CommandPrefix)
+		if Usages[cmd] == "" {
+			reply(s, m, fmt.Sprintf("The help system doesn't know about %s%s",
+				Global.CommandPrefix, cmd))
+		} else {
+			reply(s, m, fmt.Sprintf("%s%s - %s", Global.CommandPrefix,
+				cmd, Usages[cmd]))
+		}
+	} else {
+		rep := "tewibot - a spiritual successor to the lainbot family of irc bots.\nSupported commands (type &help _command_ for usage text):\n"
+		for key, _ := range Commands {
+			rep += Global.CommandPrefix + key + ", "
+		}
+		reply(s, m, rep)
+	}
+}
+
+func addCommand(c BotCmd, usage string, aliases ...string) {
 	for _, alias := range aliases {
 		Commands[alias] = c
+		Usages[alias] = usage
 	}
 }
 
 func init() {
 	Commands = make(map[string]BotCmd)
-	addCommand(waifuReg, "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
-	addCommand(getWaifu, "waifu", "husbando", "spouse")
-	addCommand(comfort, "comfort", "hug")
-	addCommand(setGender, "setgender", "genderreg")
-	addCommand(addChild, "setchild", "childreg", "setdaughteru", "daughterureg", "setsonfu", "sonfureg")
-	addCommand(getFamily, "family", "getfamily")
-	addCommand(nickname, "nick", "nickname", "setnick", "setnickname")
+	Usages = make(map[string]string)
+	addCommand(waifuReg, "Register your waifu with the bot", "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
+	addCommand(getWaifu, "Print your (or someone else's) waifu", "waifu", "husbando", "spouse")
+	addCommand(comfort, "Dispense hugs and other niceness", "comfort", "hug")
+	addCommand(setGender, "Set your gender - m, f, x\nThis affects which pronouns the bot will use for you (he, she, they)", "setgender", "genderreg")
+	addCommand(addChild, "Register one of your children with the bot", "setchild", "childreg", "setdaughteru", "daughterureg", "setsonfu", "sonfureg")
+	addCommand(getFamily, "Print your (or someone else's) family", "family", "getfamily")
+	addCommand(nickname, "If given a nickname, set your nickname to that. Otherwise, print your nickname.", "nick", "nickname", "setnick", "setnickname")
+	addCommand(help, "Access the on-line help system", "help", "usage", "sos")
 	InitGlobal()
 	InitComforts()
 
