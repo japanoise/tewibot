@@ -396,6 +396,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		reply(s, m, "Ping!")
 	}
 
+	// Informal standard
+	if m.Content == ".bots" {
+		reply(s, m, "tewibot reporting in! [Golang] https://github.com/japanoise/tewibot")
+	}
+
 	if len(m.Content) > len(Global.CommandPrefix) {
 		if strings.HasPrefix(m.Content, Global.CommandPrefix) {
 			run := Commands[strings.ToLower(strings.Split(strings.TrimPrefix(
