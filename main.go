@@ -12,8 +12,9 @@ import (
 
 // Variables used for command line parameters
 var (
-	Token string
-	BotID string
+	Token   string
+	BotID   string
+	AdminID string
 )
 
 const (
@@ -336,6 +337,7 @@ func init() {
 	InitComforts()
 
 	flag.StringVar(&Token, "t", "", "Bot Token")
+	flag.StringVar(&AdminID, "a", "", "Admin's Discord ID")
 	flag.Parse()
 }
 
