@@ -148,10 +148,17 @@ func getFamily(s *discordgo.Session, m *discordgo.MessageCreate) {
 		ret := ""
 		if wifu == nil {
 			ret = fmt.Sprintf("Looks like %s doesn't have a waifu...\n", u.Nickname)
-		} else {
+		} else if len(u.Waifus) == 1 {
 			ret = fmt.Sprintf(
 				"According to the databanks, %s's %s is %s\n",
 				u.Nickname, Spouse[wifu.Gender], wifu.Name)
+		} else {
+			ret = fmt.Sprintf("%s has %d spouses:\n", u.Nickname, len(u.Waifus))
+			for i, waifu := range u.Waifus {
+				ret += fmt.Sprintf(
+					"%d) %s %s, %s\n", i+1,
+					pp[u.Gender], Spouse[waifu.Gender], waifu.Name)
+			}
 		}
 		if u.Children == nil {
 			ret += fmt.Sprintf("Looks like %s doesn't have any children...", u.Nickname)
@@ -236,11 +243,42 @@ func comfort(s *discordgo.Session, m *discordgo.MessageCreate) {
 		reply(s, m, fmt.Sprintf("_cuddles %s close_", name))
 	} else {
 		name = u.Nickname
-		wifu := fetchWaifu(u)
+		wifu := fetchRandWaifu(u)
 		if wifu == nil {
 			reply(s, m, fmt.Sprintf("_cuddles %s close_", name))
 		} else {
 			reply(s, m, pronouns(u, wifu, randoms(Comforts)))
+		}
+	}
+}
+
+func waifuDel(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	gen := GenderFemale
+	if strings.Contains(strings.ToLower(words[0]), "husbando") {
+		gen = GenderMale
+	}
+	if strings.Contains(strings.ToLower(words[0]), "spouse") {
+		gen = GenderNeuter
+	}
+	if len(words) > 1 {
+		var wname string = strings.Join(words[1:], " ")
+		if Global.Users[m.Author.ID].Waifus == nil {
+			reply(s, m, "But you don't have a waifu!")
+		} else {
+			u := Global.Users[m.Author.ID]
+			for i, waifu := range u.Waifus {
+				if waifu.Name == wname && waifu.Gender == gen {
+					reply(s, m, fmt.Sprintf("Removing %s from %s's waifus",
+						wname, m.Author.Username))
+					copy(u.Waifus[i:], u.Waifus[i+1:])
+					u.Waifus[len(u.Waifus)-1] = BotWaifu{} // or the zero value of T
+					u.Waifus = u.Waifus[:len(u.Waifus)-1]
+					return
+				}
+			}
+			reply(s, m, "Couldn't find that waifu in your waifu list!")
 		}
 	}
 }
@@ -258,8 +296,13 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 	spouse := Spouse[gen]
 	if len(words) > 1 {
 		var wname string = strings.Join(words[1:], " ")
-		Global.Users[m.Author.ID].Waifus = []BotWaifu{
-			BotWaifu{wname, gen},
+		if Global.Users[m.Author.ID].Waifus == nil {
+			Global.Users[m.Author.ID].Waifus = []BotWaifu{
+				BotWaifu{wname, gen},
+			}
+		} else {
+			Global.Users[m.Author.ID].Waifus = append(Global.Users[m.Author.ID].Waifus,
+				BotWaifu{wname, gen})
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, spouse, wname))
@@ -325,6 +368,7 @@ func init() {
 	Commands = make(map[string]BotCmd)
 	Usages = make(map[string]string)
 	addCommand(waifuReg, "Register your waifu with the bot", "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
+	addCommand(waifuDel, "Delete a previously registered waifu", "waifudel", "husbandodel", "spousedel")
 	addCommand(getGender, "Print your (or someone else's) gender", "gender", "getgender")
 	addCommand(getWaifu, "Print your (or someone else's) waifu", "waifu", "husbando", "spouse")
 	addCommand(comfort, "Dispense hugs and other niceness", "comfort", "hug")

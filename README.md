@@ -13,10 +13,10 @@ A Discord bot for waifufriends; the spiritual successor to the lainbot family.
 - Remembers your nickname, gender, and family across servers
 - Not descended from lainbot's or kkdwfb's code
 - Saves to easy-to-read, easy-to-modify, and portable JavaScript Object Notation (json)
+- Support for polyamory (Ree some more `:^)`)
 
 ## plans
 
-- Support for polyamory (pending discussion)
 - Quotes database
 - Custom comforts
 - `rcomfort`
