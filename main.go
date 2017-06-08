@@ -357,6 +357,27 @@ func help(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func adminInfo(s *discordgo.Session, m *discordgo.MessageCreate) {
+	rep := ""
+	if AdminID == "" {
+		rep = "There is no admin set for the bot."
+	} else if isSenderAdmin(m) {
+		rep = "You are the admin."
+	} else {
+		admin, err := s.User(AdminID)
+		if err == nil {
+			rep = fmt.Sprintf("%s is the admin.", admin.Mention())
+		} else {
+			rep = fmt.Sprintf("%s is the admin, but I can't mention them...", AdminID)
+		}
+	}
+	reply(s, m, rep)
+}
+
+func isSenderAdmin(m *discordgo.MessageCreate) bool {
+	return AdminID != "" && m.Author.ID == AdminID
+}
+
 func addCommand(c BotCmd, usage string, aliases ...string) {
 	for _, alias := range aliases {
 		Commands[alias] = c
@@ -377,6 +398,7 @@ func init() {
 	addCommand(getFamily, "Print your (or someone else's) family", "family", "getfamily")
 	addCommand(nickname, "If given a nickname, set your nickname to that. Otherwise, print your nickname.", "nick", "nickname", "setnick", "setnickname")
 	addCommand(help, "Access the on-line help system", "help", "usage", "sos")
+	addCommand(adminInfo, "Print information about the admin", "admin")
 	InitGlobal()
 	InitComforts()
 
