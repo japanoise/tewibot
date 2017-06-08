@@ -228,6 +228,14 @@ func setGender(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func comfort(s *discordgo.Session, m *discordgo.MessageCreate) {
+	comfortUser(s, m, false)
+}
+
+func rcomfort(s *discordgo.Session, m *discordgo.MessageCreate) {
+	comfortUser(s, m, true)
+}
+
+func comfortUser(s *discordgo.Session, m *discordgo.MessageCreate, rev bool) {
 	var id string
 	var name string
 	var u *BotUser
@@ -247,7 +255,11 @@ func comfort(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if wifu == nil {
 			reply(s, m, fmt.Sprintf("_cuddles %s close_", name))
 		} else {
-			reply(s, m, pronouns(u, wifu, randoms(Comforts)))
+			if rev {
+				reply(s, m, pronouns(wifu, u, randoms(Comforts)))
+			} else {
+				reply(s, m, pronouns(u, wifu, randoms(Comforts)))
+			}
 		}
 	}
 }
@@ -392,7 +404,8 @@ func init() {
 	addCommand(waifuDel, "Delete a previously registered waifu", "waifudel", "husbandodel", "spousedel")
 	addCommand(getGender, "Print your (or someone else's) gender", "gender", "getgender")
 	addCommand(getWaifu, "Print your (or someone else's) waifu", "waifu", "husbando", "spouse")
-	addCommand(comfort, "Dispense hugs and other niceness", "comfort", "hug")
+	addCommand(comfort, "Dispense hugs and other niceness from your waifu", "comfort", "hug")
+	addCommand(rcomfort, "Dispense hugs and other niceness to your waifu", "rcomfort", "rhug")
 	addCommand(setGender, "Set your gender - m, f, x\nThis affects which pronouns the bot will use for you (he, she, they)", "setgender", "genderreg")
 	addCommand(addChild, "Register one of your children with the bot", "setchild", "childreg", "setdaughteru", "daughterureg", "setsonfu", "sonfureg")
 	addCommand(getFamily, "Print your (or someone else's) family", "family", "getfamily")
