@@ -37,9 +37,12 @@ func InitComforts() {
 func SaveGlobal() {
 	f, err := os.Create("waifus.json")
 	if err == nil {
-		dec := json.NewEncoder(f)
-		if err = dec.Encode(&Global); err != nil {
+		defer f.Close()
+		data, err := json.MarshalIndent(&Global, "", "\t")
+		if err != nil {
 			fmt.Println(err.Error())
+		} else {
+			f.Write(data)
 		}
 	} else {
 		fmt.Println(err.Error())
