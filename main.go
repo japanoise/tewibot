@@ -38,8 +38,9 @@ type Human interface {
 }
 
 type BotWaifu struct {
-	Name   string
-	Gender byte
+	Name    string
+	Gender  byte
+	Picture string
 }
 
 func (b *BotWaifu) GetName() string { return b.Name }
@@ -48,8 +49,8 @@ func (b *BotWaifu) GetGender() byte { return b.Gender }
 type BotUser struct {
 	Nickname string
 	Gender   byte
-	Waifus   []BotWaifu
-	Children []BotWaifu
+	Waifus   []*BotWaifu
+	Children []*BotWaifu
 }
 
 func (b *BotUser) GetName() string { return b.Nickname }
@@ -87,7 +88,7 @@ func fetchWaifu(u *BotUser) *BotWaifu {
 	} else if len(u.Waifus) == 0 {
 		return nil
 	} else {
-		return &u.Waifus[0]
+		return u.Waifus[0]
 	}
 }
 
@@ -124,10 +125,14 @@ func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 		wifu := fetchWaifu(u)
 		if wifu == nil {
 			reply(s, m, fmt.Sprintf("Looks like %s doesn't have a waifu...", u.Nickname))
-		} else {
+		} else if wifu.Picture == "" {
 			reply(s, m, fmt.Sprintf(
 				"According to the databanks, %s's %s is %s",
 				u.Nickname, Spouse[wifu.Gender], wifu.Name))
+		} else {
+			reply(s, m, fmt.Sprintf(
+				"According to the databanks, %s's %s is %s (%s)",
+				u.Nickname, Spouse[wifu.Gender], wifu.Name, wifu.Picture))
 		}
 	}
 }
@@ -149,15 +154,23 @@ func getFamily(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if wifu == nil {
 			ret = fmt.Sprintf("Looks like %s doesn't have a waifu...\n", u.Nickname)
 		} else if len(u.Waifus) == 1 {
+			pic := ""
+			if wifu.Picture != "" {
+				pic = " (" + wifu.Picture + ")"
+			}
 			ret = fmt.Sprintf(
-				"According to the databanks, %s's %s is %s\n",
-				u.Nickname, Spouse[wifu.Gender], wifu.Name)
+				"According to the databanks, %s's %s is %s%s\n",
+				u.Nickname, Spouse[wifu.Gender], wifu.Name, pic)
 		} else {
 			ret = fmt.Sprintf("%s has %d spouses:\n", u.Nickname, len(u.Waifus))
 			for i, waifu := range u.Waifus {
+				pic := ""
+				if waifu.Picture != "" {
+					pic = " (" + waifu.Picture + ")"
+				}
 				ret += fmt.Sprintf(
-					"%d) %s %s, %s\n", i+1,
-					pp[u.Gender], Spouse[waifu.Gender], waifu.Name)
+					"%d) %s %s, %s%s\n", i+1,
+					pp[u.Gender], Spouse[waifu.Gender], waifu.Name, pic)
 			}
 		}
 		if u.Children == nil {
@@ -167,9 +180,13 @@ func getFamily(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			ret += fmt.Sprintf("%s's children are:", u.Nickname)
 			for _, child := range u.Children {
+				pic := ""
+				if child.Picture != "" {
+					pic = "(" + child.Picture + ")"
+				}
 				ret += fmt.Sprintf(
-					"\n%s %s, %s",
-					pp[u.Gender], Child[child.Gender], child.Name)
+					"\n%s %s, %s %s",
+					pp[u.Gender], Child[child.Gender], child.Name, pic)
 			}
 		}
 		reply(s, m, ret)
@@ -285,12 +302,48 @@ func waifuDel(s *discordgo.Session, m *discordgo.MessageCreate) {
 					reply(s, m, fmt.Sprintf("Removing %s from %s's waifus",
 						wname, m.Author.Username))
 					copy(u.Waifus[i:], u.Waifus[i+1:])
-					u.Waifus[len(u.Waifus)-1] = BotWaifu{} // or the zero value of T
+					u.Waifus[len(u.Waifus)-1] = nil // or the zero value of T
 					u.Waifus = u.Waifus[:len(u.Waifus)-1]
 					return
 				}
 			}
 			reply(s, m, "Couldn't find that waifu in your waifu list!")
+		}
+	}
+}
+
+func waifuPicAdd(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	if len(words) > 2 {
+		var pic string = words[1]
+		if pic == "" {
+			reply(s, m, "Please provide a picture")
+			return
+		}
+		var wname string = strings.Join(words[2:], " ")
+		if Global.Users[m.Author.ID].Waifus != nil {
+			u := Global.Users[m.Author.ID]
+			for _, waifu := range u.Waifus {
+				if waifu.Name == wname {
+					reply(s, m, fmt.Sprintf("Adding a picture of %s - %s",
+						wname, pic))
+					waifu.Picture = pic
+					return
+				}
+			}
+		}
+
+		if Global.Users[m.Author.ID].Children != nil {
+			u := Global.Users[m.Author.ID]
+			for _, c := range u.Children {
+				if c.Name == wname {
+					reply(s, m, fmt.Sprintf("Adding a picture of %s - %s",
+						wname, pic))
+					c.Picture = pic
+					return
+				}
+			}
 		}
 	}
 }
@@ -309,12 +362,12 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if len(words) > 1 {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Waifus == nil {
-			Global.Users[m.Author.ID].Waifus = []BotWaifu{
-				BotWaifu{wname, gen},
+			Global.Users[m.Author.ID].Waifus = []*BotWaifu{
+				&BotWaifu{wname, gen, ""},
 			}
 		} else {
 			Global.Users[m.Author.ID].Waifus = append(Global.Users[m.Author.ID].Waifus,
-				BotWaifu{wname, gen})
+				&BotWaifu{wname, gen, ""})
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, spouse, wname))
@@ -336,12 +389,12 @@ func addChild(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if len(words) > 1 {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Children == nil {
-			Global.Users[m.Author.ID].Children = []BotWaifu{
-				BotWaifu{wname, gen},
+			Global.Users[m.Author.ID].Children = []*BotWaifu{
+				&BotWaifu{wname, gen, ""},
 			}
 		} else {
 			Global.Users[m.Author.ID].Children = append(
-				Global.Users[m.Author.ID].Children, BotWaifu{wname, gen})
+				Global.Users[m.Author.ID].Children, &BotWaifu{wname, gen, ""})
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, child, wname))
@@ -412,6 +465,7 @@ func init() {
 	addCommand(nickname, "If given a nickname, set your nickname to that. Otherwise, print your nickname.", "nick", "nickname", "setnick", "setnickname")
 	addCommand(help, "Access the on-line help system", "help", "usage", "sos")
 	addCommand(adminInfo, "Print information about the admin", "admin")
+	addCommand(waifuPicAdd, "Add a picture to your waifu; e.g. &waifupicadd http://i.imgur.com/Gqf1rGi.jpg Miku", "picadd")
 	InitGlobal()
 	InitComforts()
 

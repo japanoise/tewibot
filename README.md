@@ -14,6 +14,7 @@ A Discord bot for waifufriends; the spiritual successor to the lainbot family.
 - Not descended from lainbot's or kkdwfb's code
 - Saves to easy-to-read, easy-to-modify, and portable JavaScript Object Notation (json)
 - Support for polyamory (Ree some more `:^)`)
+- Add pictures of your family to the bot
 
 ## plans
 
