@@ -465,7 +465,7 @@ func init() {
 	addCommand(nickname, "If given a nickname, set your nickname to that. Otherwise, print your nickname.", "nick", "nickname", "setnick", "setnickname")
 	addCommand(help, "Access the on-line help system", "help", "usage", "sos")
 	addCommand(adminInfo, "Print information about the admin", "admin")
-	addCommand(waifuPicAdd, "Add a picture to your waifu; e.g. &waifupicadd http://i.imgur.com/Gqf1rGi.jpg Miku", "picadd")
+	addCommand(waifuPicAdd, "Add a picture to your waifu; e.g. &picadd http://i.imgur.com/Gqf1rGi.jpg Miku", "picadd")
 	InitGlobal()
 	InitComforts()
 
