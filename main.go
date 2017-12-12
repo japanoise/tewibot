@@ -312,6 +312,37 @@ func waifuDel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func childDel(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	gen := GenderFemale
+	if strings.Contains(strings.ToLower(words[0]), "son") {
+		gen = GenderMale
+	}
+	if strings.Contains(strings.ToLower(words[0]), "child") {
+		gen = GenderNeuter
+	}
+	if len(words) > 1 {
+		var wname string = strings.Join(words[1:], " ")
+		if Global.Users[m.Author.ID].Children == nil {
+			reply(s, m, "But you don't have any children!")
+		} else {
+			u := Global.Users[m.Author.ID]
+			for i, child := range u.Children {
+				if child.Name == wname && child.Gender == gen {
+					reply(s, m, fmt.Sprintf("Removing %s from %s's children",
+						wname, m.Author.Username))
+					copy(u.Children[i:], u.Children[i+1:])
+					u.Children[len(u.Children)-1] = nil // or the zero value of T
+					u.Children = u.Children[:len(u.Children)-1]
+					return
+				}
+			}
+			reply(s, m, fmt.Sprintf("%s is not one of your children!", wname))
+		}
+	}
+}
+
 func waifuPicAdd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	adduserifne(m)
 	words := strings.Split(m.Content, " ")
@@ -455,6 +486,7 @@ func init() {
 	Usages = make(map[string]string)
 	addCommand(waifuReg, "Register your waifu with the bot", "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
 	addCommand(waifuDel, "Delete a previously registered waifu", "waifudel", "husbandodel", "spousedel")
+	addCommand(childDel, "Delete a previously registered child", "daughterdel", "sondel", "childdel")
 	addCommand(getGender, "Print your (or someone else's) gender", "gender", "getgender")
 	addCommand(getWaifu, "Print your (or someone else's) waifu", "waifu", "husbando", "spouse")
 	addCommand(comfort, "Dispense hugs and other niceness from your waifu", "comfort", "hug")
