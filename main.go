@@ -110,6 +110,34 @@ func getGender(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func getSpouseString(u *BotUser) string {
+	wifu := fetchWaifu(u)
+	ret := ""
+	if wifu == nil {
+		ret = fmt.Sprintf("Looks like %s doesn't have a waifu...\n", u.Nickname)
+	} else if len(u.Waifus) == 1 {
+		pic := ""
+		if wifu.Picture != "" {
+			pic = " (" + wifu.Picture + ")"
+		}
+		ret = fmt.Sprintf(
+			"According to the databanks, %s's %s is %s%s\n",
+			u.Nickname, Spouse[wifu.Gender], wifu.Name, pic)
+	} else {
+		ret = fmt.Sprintf("%s has %d spouses:\n", u.Nickname, len(u.Waifus))
+		for i, waifu := range u.Waifus {
+			pic := ""
+			if waifu.Picture != "" {
+				pic = " (" + waifu.Picture + ")"
+			}
+			ret += fmt.Sprintf(
+				"%d) %s %s, %s%s\n", i+1,
+				pp[u.Gender], Spouse[waifu.Gender], waifu.Name, pic)
+		}
+	}
+	return ret
+}
+
 func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var id string
 	var u *BotUser
@@ -122,18 +150,7 @@ func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if u == nil {
 		reply(s, m, "I've no idea who that is!")
 	} else {
-		wifu := fetchWaifu(u)
-		if wifu == nil {
-			reply(s, m, fmt.Sprintf("Looks like %s doesn't have a waifu...", u.Nickname))
-		} else if wifu.Picture == "" {
-			reply(s, m, fmt.Sprintf(
-				"According to the databanks, %s's %s is %s",
-				u.Nickname, Spouse[wifu.Gender], wifu.Name))
-		} else {
-			reply(s, m, fmt.Sprintf(
-				"According to the databanks, %s's %s is %s (%s)",
-				u.Nickname, Spouse[wifu.Gender], wifu.Name, wifu.Picture))
-		}
+		reply(s, m, getSpouseString(u))
 	}
 }
 
@@ -149,30 +166,7 @@ func getFamily(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if u == nil {
 		reply(s, m, "I've no idea who that is!")
 	} else {
-		wifu := fetchWaifu(u)
-		ret := ""
-		if wifu == nil {
-			ret = fmt.Sprintf("Looks like %s doesn't have a waifu...\n", u.Nickname)
-		} else if len(u.Waifus) == 1 {
-			pic := ""
-			if wifu.Picture != "" {
-				pic = " (" + wifu.Picture + ")"
-			}
-			ret = fmt.Sprintf(
-				"According to the databanks, %s's %s is %s%s\n",
-				u.Nickname, Spouse[wifu.Gender], wifu.Name, pic)
-		} else {
-			ret = fmt.Sprintf("%s has %d spouses:\n", u.Nickname, len(u.Waifus))
-			for i, waifu := range u.Waifus {
-				pic := ""
-				if waifu.Picture != "" {
-					pic = " (" + waifu.Picture + ")"
-				}
-				ret += fmt.Sprintf(
-					"%d) %s %s, %s%s\n", i+1,
-					pp[u.Gender], Spouse[waifu.Gender], waifu.Name, pic)
-			}
-		}
+		ret := getSpouseString(u)
 		if u.Children == nil {
 			ret += fmt.Sprintf("Looks like %s doesn't have any children...", u.Nickname)
 		} else if len(u.Children) == 0 {
