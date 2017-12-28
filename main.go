@@ -68,6 +68,8 @@ var Global BotState
 var Commands map[string]BotCmd
 var Usages map[string]string
 var Comforts []string
+var ChildComforts []string
+var ChildReverseComforts []string
 
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, msg string) {
 	fmt.Printf("me -> %s: %s\n", m.ChannelID, msg)
@@ -239,14 +241,14 @@ func setGender(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func comfort(s *discordgo.Session, m *discordgo.MessageCreate) {
-	comfortUser(s, m, false)
+	comfortUser(s, m, false, fetchRandWaifu, Comforts)
 }
 
 func rcomfort(s *discordgo.Session, m *discordgo.MessageCreate) {
-	comfortUser(s, m, true)
+	comfortUser(s, m, true, fetchRandWaifu, Comforts)
 }
 
-func comfortUser(s *discordgo.Session, m *discordgo.MessageCreate, rev bool) {
+func comfortUser(s *discordgo.Session, m *discordgo.MessageCreate, rev bool, f func(*BotUser) *BotWaifu, comforts []string) {
 	var id string
 	var name string
 	var u *BotUser
@@ -262,17 +264,28 @@ func comfortUser(s *discordgo.Session, m *discordgo.MessageCreate, rev bool) {
 		reply(s, m, fmt.Sprintf("_cuddles %s close_", name))
 	} else {
 		name = u.Nickname
-		wifu := fetchRandWaifu(u)
+		wifu := f(u)
 		if wifu == nil {
 			reply(s, m, fmt.Sprintf("_cuddles %s close_", name))
 		} else {
 			if rev {
-				reply(s, m, pronouns(wifu, u, randoms(Comforts)))
+				reply(s, m, pronouns(wifu, u, randoms(comforts)))
 			} else {
-				reply(s, m, pronouns(u, wifu, randoms(Comforts)))
+				reply(s, m, pronouns(u, wifu, randoms(comforts)))
 			}
 		}
 	}
+}
+
+func ccomfort(s *discordgo.Session, m *discordgo.MessageCreate) {
+	comfortUser(s, m, false, fetchRandChild, ChildComforts)
+}
+
+func crcomfort(s *discordgo.Session, m *discordgo.MessageCreate) {
+	// Yes, we don't use the reverse flag. Counter-intuitive? A little.
+	// This is one of the few places where legacy from the old bots creeps in:
+	// dr/cr comforts are specified with Anon as the %n and the child as the %wn.
+	comfortUser(s, m, false, fetchRandChild, ChildReverseComforts)
 }
 
 func waifuDel(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -485,6 +498,8 @@ func init() {
 	addCommand(getWaifu, "Print your (or someone else's) waifu", "waifu", "husbando", "spouse")
 	addCommand(comfort, "Dispense hugs and other niceness from your waifu", "comfort", "hug")
 	addCommand(rcomfort, "Dispense hugs and other niceness to your waifu", "rcomfort", "rhug")
+	addCommand(ccomfort, "Dispense hugs and other niceness from your child", "ccomfort", "dcomfort", "chug", "dhug")
+	addCommand(crcomfort, "Dispense hugs and other niceness to your child", "crcomfort", "drcomfort", "crhug", "drhug")
 	addCommand(setGender, "Set your gender - m, f, x\nThis affects which pronouns the bot will use for you (he, she, they)", "setgender", "genderreg")
 	addCommand(addChild, "Register one of your children with the bot", "setchild", "childreg", "setdaughteru", "daughterureg", "setsonfu", "sonfureg")
 	addCommand(getFamily, "Print your (or someone else's) family", "family", "getfamily")

@@ -19,3 +19,15 @@ func fetchRandWaifu(u *BotUser) *BotWaifu {
 		return u.Waifus[rand.Intn(len(u.Waifus))]
 	}
 }
+
+func fetchRandChild(u *BotUser) *BotWaifu {
+	if u.Children == nil {
+		return nil
+	} else if len(u.Children) == 0 {
+		return nil
+	} else if len(u.Children) == 1 {
+		return u.Children[0]
+	} else {
+		return u.Children[rand.Intn(len(u.Children))]
+	}
+}
