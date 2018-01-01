@@ -15,6 +15,7 @@ A Discord bot for waifufriends; the spiritual successor to the lainbot family.
 - Saves to easy-to-read, easy-to-modify, and portable JavaScript Object Notation (json)
 - Support for polyamory (Ree some more `:^)`)
 - Add pictures of your family to the bot
+- Get a random image from Danbooru, or request a picture of a family member from Danbooru
 
 ## plans
 
@@ -44,3 +45,13 @@ substitution ala FBMuck, but with a preceding 'w' for waifu's name & pronouns:
     %p (possessive)     = his, her, their.
     %r (reflexive)      = himself, herself, themself.
     %n (player's name)  = Name.
+
+## Danbooru
+
+Danbooru integration requires a Danbooru account and API key - admin must login
+to Danbooru, generate an API key on their user page, then shut down the bot and
+enter these into `waifus.json`.
+
+Having done that, test out the functionality by using the `&danbooru tag`
+command. If you have family members, you can add a tag to be associated with
+them using `&tag tag name` and fetch pictures using the `&pic` command.

@@ -41,6 +41,7 @@ type BotWaifu struct {
 	Name    string
 	Gender  byte
 	Picture string
+	Tag     string
 }
 
 func (b *BotWaifu) GetName() string { return b.Name }
@@ -57,8 +58,10 @@ func (b *BotUser) GetName() string { return b.Nickname }
 func (b *BotUser) GetGender() byte { return b.Gender }
 
 type BotState struct {
-	Users         map[string]*BotUser
-	CommandPrefix string
+	Users          map[string]*BotUser
+	CommandPrefix  string
+	DanbooruLogin  string
+	DanbooruAPIKey string
 }
 
 type BotCmd func(*discordgo.Session, *discordgo.MessageCreate)
@@ -91,6 +94,95 @@ func fetchWaifu(u *BotUser) *BotWaifu {
 		return nil
 	} else {
 		return u.Waifus[0]
+	}
+}
+
+func danbooruPic(s *discordgo.Session, m *discordgo.MessageCreate) {
+	words := strings.Split(m.Content, " ")
+	if len(words) <= 1 {
+		reply(s, m, "Please specify a tag to search on Danbooru")
+	} else {
+		reply(s, m, fetchImage(words[1]))
+	}
+}
+
+func getWaifuPic(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	u := Global.Users[m.Author.ID]
+	words := strings.Split(m.Content, " ")
+	if len(words) > 1 {
+		wname := strings.Join(words[1:], " ")
+		for _, wifu := range u.Waifus {
+			if wifu.Name == wname {
+				if wifu.Tag == "" {
+					reply(s, m, fmt.Sprintf("Set a tag to use when looking for pictures of %s - &tag some_tag %s", wname, wname))
+				} else {
+					reply(s, m, fetchImage(wifu.Tag))
+				}
+			}
+		}
+		for _, wifu := range u.Children {
+			if wifu.Name == wname {
+				if wifu.Tag == "" {
+					reply(s, m, fmt.Sprintf("Set a tag to use when looking for pictures of %s - &tag some_tag %s", wname, wname))
+				} else {
+					reply(s, m, fetchImage(wifu.Tag))
+				}
+			}
+		}
+	} else {
+		tags := []string{}
+		for _, wifu := range u.Waifus {
+			if wifu.Tag != "" {
+				tags = append(tags, wifu.Tag)
+			}
+		}
+		for _, wifu := range u.Children {
+			if wifu.Tag != "" {
+				tags = append(tags, wifu.Tag)
+			}
+		}
+		if len(tags) == 0 {
+			reply(s, m, "Either you don't have any family members set, or none of your family members have danbooru tags.")
+		} else {
+			reply(s, m, fetchImage(randoms(tags)))
+		}
+	}
+}
+
+func waifuTagAdd(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	if len(words) > 2 {
+		var tag string = words[1]
+		if tag == "" {
+			reply(s, m, "Please provide a tag")
+			return
+		}
+		var wname string = strings.Join(words[2:], " ")
+		if Global.Users[m.Author.ID].Waifus != nil {
+			u := Global.Users[m.Author.ID]
+			for _, waifu := range u.Waifus {
+				if waifu.Name == wname {
+					reply(s, m, fmt.Sprintf("Setting %s's danbooru tag to %s",
+						wname, tag))
+					waifu.Tag = tag
+					return
+				}
+			}
+		}
+
+		if Global.Users[m.Author.ID].Children != nil {
+			u := Global.Users[m.Author.ID]
+			for _, c := range u.Children {
+				if c.Name == wname {
+					reply(s, m, fmt.Sprintf("Setting %s's danbooru tag to %s",
+						wname, tag))
+					c.Tag = tag
+					return
+				}
+			}
+		}
 	}
 }
 
@@ -401,11 +493,11 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Waifus == nil {
 			Global.Users[m.Author.ID].Waifus = []*BotWaifu{
-				&BotWaifu{wname, gen, ""},
+				&BotWaifu{wname, gen, "", ""},
 			}
 		} else {
 			Global.Users[m.Author.ID].Waifus = append(Global.Users[m.Author.ID].Waifus,
-				&BotWaifu{wname, gen, ""})
+				&BotWaifu{wname, gen, "", ""})
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, spouse, wname))
@@ -428,11 +520,11 @@ func addChild(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Children == nil {
 			Global.Users[m.Author.ID].Children = []*BotWaifu{
-				&BotWaifu{wname, gen, ""},
+				&BotWaifu{wname, gen, "", ""},
 			}
 		} else {
 			Global.Users[m.Author.ID].Children = append(
-				Global.Users[m.Author.ID].Children, &BotWaifu{wname, gen, ""})
+				Global.Users[m.Author.ID].Children, &BotWaifu{wname, gen, "", ""})
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, child, wname))
@@ -507,6 +599,9 @@ func init() {
 	addCommand(help, "Access the on-line help system", "help", "usage", "sos")
 	addCommand(adminInfo, "Print information about the admin", "admin")
 	addCommand(waifuPicAdd, "Add a picture to your waifu; e.g. &picadd http://i.imgur.com/Gqf1rGi.jpg Miku", "picadd")
+	addCommand(danbooruPic, "Fetch an image with the given tag from danbooru", "danbooru")
+	addCommand(waifuTagAdd, "Set your child or waifu's tag to use when searching danbooru", "tag")
+	addCommand(getWaifuPic, "Get an image of your waifu or child from danbooru", "pic")
 	InitGlobal()
 	InitComforts()
 
