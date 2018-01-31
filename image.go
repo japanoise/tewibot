@@ -70,7 +70,11 @@ func imageLinkForJson(b []byte) string {
 	}
 	switch fut := fileurl.(type) {
 	case string:
-		return "https://danbooru.donmai.us" + fut
+		if strings.HasPrefix(fut, "http") {
+			return strings.Replace(strings.Replace(fut, "https//", "https://", 1), "http//", "http://", 1)
+		} else {
+			return "https://danbooru.donmai.us" + fut
+		}
 	default:
 		return "Malformed json data (wrong type for file_url; was expecting string)"
 	}
