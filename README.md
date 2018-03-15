@@ -22,7 +22,6 @@ A Discord bot for waifufriends; the spiritual successor to the lainbot family.
 
 - Quotes database
 - Custom comforts
-- `rcomfort`
 - Steal some features from lainbot forks
 - The usual bot features (reminders, memos, weather etc.)
 
