@@ -52,6 +52,7 @@ type BotUser struct {
 	Gender   byte
 	Waifus   []*BotWaifu
 	Children []*BotWaifu
+	Intro    string
 }
 
 func (b *BotUser) GetName() string { return b.Nickname }
@@ -84,6 +85,18 @@ func adduserifne(m *discordgo.MessageCreate) {
 		ret := new(BotUser)
 		ret.Nickname = m.Author.Username
 		Global.Users[m.Author.ID] = ret
+	}
+}
+
+func setIntro(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	u := Global.Users[m.Author.ID]
+	if len(words) > 1 {
+		u.Intro = strings.Join(words[1:], " ")
+		reply(s, m, fmt.Sprintf("Setting %s's intro to %s", u.Nickname, u.Intro))
+	} else {
+		reply(s, m, fmt.Sprintf("%s", u.Intro))
 	}
 }
 
@@ -602,6 +615,7 @@ func init() {
 	addCommand(danbooruPic, "Fetch an image with the given tag from danbooru", "danbooru")
 	addCommand(waifuTagAdd, "Set your child or waifu's tag to use when searching danbooru", "tag")
 	addCommand(getWaifuPic, "Get an image of your waifu or child from danbooru", "pic")
+	addCommand(setIntro, "Set or display your introduction", "intro")
 	InitGlobal()
 	InitComforts()
 

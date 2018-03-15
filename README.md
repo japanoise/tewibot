@@ -16,6 +16,7 @@ A Discord bot for waifufriends; the spiritual successor to the lainbot family.
 - Support for polyamory (Ree some more `:^)`)
 - Add pictures of your family to the bot
 - Get a random image from Danbooru, or request a picture of a family member from Danbooru
+- Get the bot to introduce you to newcomers
 
 ## plans
 
