@@ -3,9 +3,12 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -15,12 +18,18 @@ var (
 	Token   string
 	BotID   string
 	AdminID string
+	LogLoc  string
+	LogPref string
+	Logging bool
+	LN      int
 )
 
 const (
 	GenderNeuter byte = iota
 	GenderMale
 	GenderFemale
+
+	LogR int = 10000
 )
 
 var Spouse = [...]string{"spouse", "hazubando", "waifu"}
@@ -621,8 +630,17 @@ func init() {
 
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.StringVar(&AdminID, "a", "", "Admin's Discord ID")
+	flag.StringVar(&LogLoc, "l", "", "Place to put logs in")
+	flag.StringVar(&LogPref, "p", "", "Prefix for lines to include in logs")
 	flag.Parse()
+	Logging = LogLoc != ""
+	if Logging {
+		log.SetFlags(log.Ldate | log.Ltime | log.LUTC)
+		logRotate()
+	}
 }
+
+var logfile *os.File = nil
 
 func main() {
 
@@ -644,6 +662,7 @@ func main() {
 
 	// Register messageCreate as a callback for the messageCreate events.
 	dg.AddHandler(messageCreate)
+	dg.AddHandler(messageDelete)
 
 	// Open the websocket and begin listening.
 	err = dg.Open()
@@ -658,6 +677,40 @@ func main() {
 	<-sigchan
 	fmt.Println("Recieved interrupt, exiting gracefully")
 	SaveGlobal()
+	if logfile != nil {
+		logfile.Close()
+	}
+}
+
+func genLogName() string {
+	return LogLoc + string(os.PathSeparator) + "log-" + strconv.FormatInt(time.Now().Unix(), 10) + ".txt"
+}
+
+func logRotate() {
+	if logfile != nil {
+		logfile.Close()
+	}
+	logfile, err := os.OpenFile(genLogName(), os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		logfile = nil
+		fmt.Println(err.Error())
+		log.SetOutput(os.Stdout)
+		return
+	}
+	log.SetOutput(logfile)
+}
+
+func logMsg(fomt string, args ...interface{}) {
+	msg := fmt.Sprintf(fomt, args...)
+	fmt.Print(msg)
+	if Logging && strings.HasPrefix(msg, LogPref) {
+		log.Print(msg)
+		logfile.Sync()
+		LN++
+		if LN > LogR {
+			logRotate()
+		}
+	}
 }
 
 // This function will be called (due to AddHandler above) every time a new
@@ -669,7 +722,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	fmt.Printf("%s (%s) -> %s: %s\n", m.Author.Username, m.Author.ID, m.ChannelID, m.Content)
+	ch, err := s.Channel(m.ChannelID)
+	if err != nil {
+		logMsg("[%s] %s (%s) -> %s: %s\n", "unknown guild", m.Author.Username, m.Author.ID, m.ChannelID, m.Content)
+	} else {
+		logMsg("[%s] %s (%s) -> %s (%s): %s\n", ch.GuildID, m.Author.Username, m.Author.ID, ch.Name, m.ChannelID, m.Content)
+	}
 
 	// If the message is "ping" reply with "Pong!"
 	if m.Content == "ping" {
@@ -695,4 +753,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			}
 		}
 	}
+}
+
+func messageDelete(s *discordgo.Session, m* discordgo.MessageDelete) {
+	fmt.Printf("%+v\n", m.Message)
 }
