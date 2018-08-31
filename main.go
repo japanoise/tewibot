@@ -728,6 +728,10 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	} else {
 		logMsg("[%s] %s (%s) -> %s (%s): %s\n", ch.GuildID, m.Author.Username, m.Author.ID, ch.Name, m.ChannelID, m.Content)
 	}
+	
+	if strings.HasPrefix(strings.TrimSpace(m.Content), ">") {
+		reply(s, m, fmt.Sprintf("%s: who are you quoting?", m.Author.Mention()))
+	}
 
 	// If the message is "ping" reply with "Pong!"
 	if m.Content == "ping" {
