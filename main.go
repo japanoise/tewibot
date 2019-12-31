@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -40,6 +41,11 @@ var ps = [...]string{"they", "he", "she"}
 var po = [...]string{"them", "him", "her"}
 var pp = [...]string{"their", "his", "her"}
 var pr = [...]string{"themself", "himself", "herself"}
+
+var regexWaifuAffection *regexp.Regexp
+var regexSpouseNB *regexp.Regexp
+var regexSpouseMasc *regexp.Regexp
+var regexSpouseFem *regexp.Regexp
 
 type Human interface {
 	GetName() string
@@ -720,6 +726,12 @@ func init() {
 		log.SetFlags(log.Ldate | log.Ltime | log.LUTC)
 		logRotate()
 	}
+
+	// Let's see you ROTC leeches coming up with regexes even half this good. -- Kona
+	regexWaifuAffection = regexp.MustCompile("^[Ii] ((re+a+l+y+ )*lo+ve|ne+d|wa+nt) (my )?([^.,!?]*)")
+	regexSpouseNB = regexp.MustCompile("spo+u+s+e+|da+te+ma+te+")
+	regexSpouseMasc = regexp.MustCompile("h[au]+[sz]u*bando*|bo+yfri+e+nd+")
+	regexSpouseFem = regexp.MustCompile("wa*i+f[ue]+|gi+r+l+fri+e+nd+")
 }
 
 var logfile *os.File = nil
@@ -824,6 +836,32 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	// Informal standard
 	if m.Content == ".bots" {
 		reply(s, m, "tewibot reporting in! [Golang] https://github.com/japanoise/tewibot")
+	}
+
+	if mat := regexWaifuAffection.FindStringSubmatch(m.Content); mat != nil {
+		affectionVerb := mat[1]
+		spouseOrName := mat[4]
+		if len(spouseOrName) == 0 {
+			return
+		}
+		if regexSpouseNB.MatchString(spouseOrName) {
+			reply(s, m, fmt.Sprintf("I'm sure they %s you too!", affectionVerb))
+		} else if regexSpouseMasc.MatchString(spouseOrName) {
+			reply(s, m, fmt.Sprintf("I'm sure he %ss you too!", affectionVerb))
+		} else if regexSpouseFem.MatchString(spouseOrName) {
+			reply(s, m, fmt.Sprintf("I'm sure she %ss you too!", affectionVerb))
+		} else {
+			adduserifne(m)
+			if Global.Users[m.Author.ID].Waifus != nil {
+				u := Global.Users[m.Author.ID]
+				for _, waifu := range u.Waifus {
+					if waifu.Name == spouseOrName {
+						reply(s, m, fmt.Sprintf("%s %ss you too!", waifu.Name, affectionVerb))
+						return
+					}
+				}
+			}
+		}
 	}
 
 	if len(m.Content) > len(Global.CommandPrefix) {
