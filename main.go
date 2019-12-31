@@ -51,6 +51,7 @@ type BotWaifu struct {
 	Gender  byte
 	Picture string
 	Tag     string
+	Theme   string
 }
 
 func (b *BotWaifu) GetName() string { return b.Name }
@@ -236,6 +237,9 @@ func getSpouseString(u *BotUser) string {
 		if wifu.Picture != "" {
 			pic = " (" + wifu.Picture + ")"
 		}
+		if wifu.Theme != "" {
+			pic += " =~{ " + wifu.Theme + " }~="
+		}
 		ret = fmt.Sprintf(
 			"According to the databanks, %s's %s is %s%s\n",
 			u.Nickname, Spouse[wifu.Gender], wifu.Name, pic)
@@ -245,6 +249,9 @@ func getSpouseString(u *BotUser) string {
 			pic := ""
 			if waifu.Picture != "" {
 				pic = " (" + waifu.Picture + ")"
+			}
+			if waifu.Theme != "" {
+				pic += " =~{ " + waifu.Theme + " }~="
 			}
 			ret += fmt.Sprintf(
 				"%d) %s %s, %s%s\n", i+1,
@@ -270,6 +277,22 @@ func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func getChildString(u *BotUser, child *BotWaifu) string {
+	pic := ""
+	if child.Picture != "" {
+		pic = "(" + child.Picture + ")"
+	}
+	if child.Theme != "" {
+		if pic != "" {
+			pic += " "
+		}
+		pic += "=~{ " + child.Theme + " }~="
+	}
+	return fmt.Sprintf(
+		"\n%s %s, %s %s",
+		pp[u.Gender], Child[child.Gender], child.Name, pic)
+}
+
 func getFamily(s *discordgo.Session, m *discordgo.MessageCreate) {
 	var id string
 	var u *BotUser
@@ -290,13 +313,7 @@ func getFamily(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			ret += fmt.Sprintf("%s's children are:", u.Nickname)
 			for _, child := range u.Children {
-				pic := ""
-				if child.Picture != "" {
-					pic = "(" + child.Picture + ")"
-				}
-				ret += fmt.Sprintf(
-					"\n%s %s, %s %s",
-					pp[u.Gender], Child[child.Gender], child.Name, pic)
+				ret += getChildString(u, child)
 			}
 		}
 		reply(s, m, ret)
@@ -515,11 +532,11 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Waifus == nil {
 			Global.Users[m.Author.ID].Waifus = []*BotWaifu{
-				&BotWaifu{wname, gen, "", ""},
+				&BotWaifu{wname, gen, "", "", ""},
 			}
 		} else {
 			Global.Users[m.Author.ID].Waifus = append(Global.Users[m.Author.ID].Waifus,
-				&BotWaifu{wname, gen, "", ""})
+				&BotWaifu{wname, gen, "", "", ""})
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, spouse, wname))
@@ -542,15 +559,79 @@ func addChild(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Children == nil {
 			Global.Users[m.Author.ID].Children = []*BotWaifu{
-				&BotWaifu{wname, gen, "", ""},
+				&BotWaifu{wname, gen, "", "", ""},
 			}
 		} else {
 			Global.Users[m.Author.ID].Children = append(
-				Global.Users[m.Author.ID].Children, &BotWaifu{wname, gen, "", ""})
+				Global.Users[m.Author.ID].Children, &BotWaifu{wname, gen, "", "", ""})
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, child, wname))
 		fmt.Println(m.Author.ID, child, wname)
+	}
+}
+
+func themeAddOrGet(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	if len(words) > 1 {
+		var pic string = words[1]
+		if pic == "" {
+			reply(s, m, "Please provide a picture or family member name")
+			return
+		}
+		dopic := strings.HasPrefix(pic, "http://") ||
+			strings.HasPrefix(pic, "https://")
+		var wname string
+		if dopic {
+			if len(words) < 3 {
+				reply(s, m, "You need to specify who gets the theme song!")
+				return
+			}
+			wname = strings.Join(words[2:], " ")
+		} else {
+			wname = strings.Join(words[1:], " ")
+		}
+		if Global.Users[m.Author.ID].Waifus != nil {
+			u := Global.Users[m.Author.ID]
+			for _, waifu := range u.Waifus {
+				if waifu.Name == wname {
+					if dopic {
+						reply(s, m, fmt.Sprintf("Adding a theme for %s - %s",
+							wname, pic))
+						waifu.Theme = pic
+					} else if waifu.Theme == "" {
+						reply(s, m, "No theme found, you can add one with the theme command")
+					} else {
+						reply(s, m, fmt.Sprintf("%s's theme is %s",
+							wname, waifu.Theme))
+					}
+					return
+				}
+			}
+		}
+
+		if Global.Users[m.Author.ID].Children != nil {
+			u := Global.Users[m.Author.ID]
+			for _, c := range u.Children {
+				if c.Name == wname {
+					if dopic {
+						reply(s, m, fmt.Sprintf("Adding a theme for %s - %s",
+							wname, pic))
+						c.Theme = pic
+					} else if c.Theme == "" {
+						reply(s, m, "No theme found, you can add one with the theme command")
+					} else {
+						reply(s, m, fmt.Sprintf("%s's theme is %s",
+							wname, c.Theme))
+					}
+					return
+				}
+			}
+		}
+	} else {
+
+		reply(s, m, "Not enough arguments. Format: &theme LINK WAIFU or &theme WAIFU")
 	}
 }
 
@@ -625,6 +706,7 @@ func init() {
 	addCommand(waifuTagAdd, "Set your child or waifu's tag to use when searching danbooru", "tag")
 	addCommand(getWaifuPic, "Get an image of your waifu or child from danbooru", "pic")
 	addCommand(setIntro, "Set or display your introduction", "intro")
+	addCommand(themeAddOrGet, "Set or get your waifu or child's theme, e.g. &theme https://www.youtube.com/watch?v=U_CfriU4Cng Miku", "theme")
 	InitGlobal()
 	InitComforts()
 
@@ -755,6 +837,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func messageDelete(s *discordgo.Session, m* discordgo.MessageDelete) {
+func messageDelete(s *discordgo.Session, m *discordgo.MessageDelete) {
 	fmt.Printf("%+v\n", m.Message)
 }
