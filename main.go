@@ -728,7 +728,7 @@ func init() {
 	}
 
 	// Let's see you ROTC leeches coming up with regexes even half this good. -- Kona
-	regexWaifuAffection = regexp.MustCompile("^[Ii] ((re+a+l+y+ )*lo+ve|ne+d|wa+nt) (my )?([^.,!?]*)")
+	regexWaifuAffection = regexp.MustCompile("^[Ii] ((re+a+l+y+ )*lo+ve|ne+d|wa+nt|a+do+r+e+) (my )?([^.,!?]*)")
 	regexSpouseNB = regexp.MustCompile("spo+u+s+e+|da+te+ma+te+")
 	regexSpouseMasc = regexp.MustCompile("h[au]+[sz]u*bando*|bo+yfri+e+nd+")
 	regexSpouseFem = regexp.MustCompile("wa*i+f[ue]+|gi+r+l+fri+e+nd+")
