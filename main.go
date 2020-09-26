@@ -242,13 +242,13 @@ func getSpouseString(u *BotUser) string {
 	} else if len(u.Waifus) == 1 {
 		pic := ""
 		if wifu.Picture != "" {
-			pic = " (" + wifu.Picture + ")"
+			pic = "\nPicture: " + wifu.Picture
 		}
 		if wifu.Theme != "" {
-			pic += " =~{ " + wifu.Theme + " }~="
+			pic += "\nTheme: " + wifu.Theme + ""
 		}
 		if !wifu.Anni.IsZero() {
-			pic += " Anniversary: " + wifu.Anni.Format(shortForm)
+			pic += "\nAnniversary: " + wifu.Anni.Format(shortForm)
 		}
 		ret = fmt.Sprintf(
 			"According to the databanks, %s's %s is %s.%s\n",
@@ -258,13 +258,13 @@ func getSpouseString(u *BotUser) string {
 		for i, waifu := range u.Waifus {
 			pic := ""
 			if waifu.Picture != "" {
-				pic = " (" + waifu.Picture + ")"
+				pic = "\nPicture: " + waifu.Picture
 			}
 			if waifu.Theme != "" {
-				pic += " =~{ " + waifu.Theme + " }~="
+				pic += "\nTheme: " + waifu.Theme
 			}
 			if !waifu.Anni.IsZero() {
-				pic += " Anniversary: " + wifu.Anni.Format(shortForm)
+				pic += "\nAnniversary: " + waifu.Anni.Format(shortForm)
 			}
 			ret += fmt.Sprintf(
 				"%d) %s %s, %s.%s\n", i+1,
@@ -293,19 +293,16 @@ func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 func getChildString(u *BotUser, child *BotWaifu) string {
 	pic := ""
 	if child.Picture != "" {
-		pic = "(" + child.Picture + ")"
+		pic = "\nPicture: " + child.Picture
 	}
 	if child.Theme != "" {
-		if pic != "" {
-			pic += " "
-		}
-		pic += "=~{ " + child.Theme + " }~="
+		pic += "\nTheme " + child.Theme
 	}
 	if !child.Anni.IsZero() {
-		pic += " Anniversary: " + child.Anni.Format(shortForm)
+		pic += "\nAnniversary: " + child.Anni.Format(shortForm)
 	}
 	return fmt.Sprintf(
-		"\n%s %s, %s. %s",
+		"\n%s %s, %s.%s",
 		pp[u.Gender], Child[child.Gender], child.Name, pic)
 }
 
