@@ -622,16 +622,23 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Waifus == nil {
 			Global.Users[m.Author.ID].Waifus = []*BotWaifu{
-				&BotWaifu{wname, gen, "", "", "", time.Time{}},
+				newWaifu(wname, gen),
 			}
 		} else {
 			Global.Users[m.Author.ID].Waifus = append(Global.Users[m.Author.ID].Waifus,
-				&BotWaifu{wname, gen, "", "", "", time.Time{}})
+				newWaifu(wname, gen))
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, spouse, wname))
 		fmt.Println(m.Author.ID, spouse, wname)
 	}
+}
+
+func newWaifu(name string, gen byte) *BotWaifu {
+	ret := &BotWaifu{}
+	ret.Name = name
+	ret.Gender = gen
+	return ret
 }
 
 func addChild(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -649,11 +656,11 @@ func addChild(s *discordgo.Session, m *discordgo.MessageCreate) {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Children == nil {
 			Global.Users[m.Author.ID].Children = []*BotWaifu{
-				&BotWaifu{wname, gen, "", "", "", time.Time{}},
+				newWaifu(wname, gen),
 			}
 		} else {
 			Global.Users[m.Author.ID].Children = append(
-				Global.Users[m.Author.ID].Children, &BotWaifu{wname, gen, "", "", "", time.Time{}})
+				Global.Users[m.Author.ID].Children, newWaifu(wname, gen))
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, child, wname))
