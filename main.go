@@ -496,6 +496,26 @@ func childDel(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 const shortForm = "2006-01-02"
 
+// Hairy date code approaching. Patches welcome, but I won't fix it myself.
+func prettyDate(date time.Time) string {
+	now := time.Now()
+	ret := date.Format(shortForm) + "."
+
+	since := now.Sub(date)
+	days := since.Hours() / 24
+	ret += fmt.Sprintf("\nThat's %d days ago - roughly %d year(s) and %d day(s)!", int(days), int(days/365.25), int(days)%365)
+
+	nextDate, _ := time.Parse(shortForm, fmt.Sprintf("%4d-%02d-%02d", now.Year(), date.Month(), date.Day()))
+	if !nextDate.After(now) {
+		nextDate, _ = time.Parse(shortForm, fmt.Sprintf("%4d-%02d-%02d", now.Year()+1, date.Month(), date.Day()))
+	}
+	until := nextDate.Sub(now)
+	days = until.Hours() / 24
+	ret += fmt.Sprintf("\nIt will next occur on %s - %d days away!", nextDate.Format(shortForm), int(days))
+
+	return ret
+}
+
 func anni(s *discordgo.Session, m *discordgo.MessageCreate) {
 	adduserifne(m)
 	words := strings.Split(m.Content, " ")
@@ -505,7 +525,7 @@ func anni(s *discordgo.Session, m *discordgo.MessageCreate) {
 			u := Global.Users[m.Author.ID]
 			for _, waifu := range u.Waifus {
 				if waifu.Name == wname && !waifu.Anni.IsZero() {
-					reply(s, m, waifu.Name+": "+waifu.Anni.Format(shortForm))
+					reply(s, m, "Your anniversary with " + waifu.Name+" is "+prettyDate(waifu.Anni))
 					return
 				}
 			}
@@ -515,12 +535,12 @@ func anni(s *discordgo.Session, m *discordgo.MessageCreate) {
 			u := Global.Users[m.Author.ID]
 			for _, c := range u.Children {
 				if c.Name == wname && !c.Anni.IsZero() {
-					reply(s, m, c.Name+": "+c.Anni.Format(shortForm))
+					reply(s, m, "Your anniversary with " + c.Name+" is "+prettyDate(c.Anni))
 					return
 				}
 			}
 		}
-		
+
 		reply(s, m, "Not found, or date not set. Use waifuReg and anniReg")
 	} else {
 		reply(s, m, "Please tell me whose date you want to know!")
