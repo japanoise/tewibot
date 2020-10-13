@@ -606,7 +606,7 @@ func bday(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if Global.Users[m.Author.ID].Waifus != nil {
 			u := Global.Users[m.Author.ID]
 			for _, waifu := range u.Waifus {
-				if waifu.Name == wname && !waifu.Anni.IsZero() {
+				if waifu.Name == wname && !waifu.Bday.IsZero() {
 					reply(s, m, waifu.Name+"'s birthday is "+prettyDate(waifu.Bday))
 					return
 				}
@@ -616,7 +616,7 @@ func bday(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if Global.Users[m.Author.ID].Children != nil {
 			u := Global.Users[m.Author.ID]
 			for _, c := range u.Children {
-				if c.Name == wname && !c.Anni.IsZero() {
+				if c.Name == wname && !c.Bday.IsZero() {
 					reply(s, m, c.Name+"'s birthday is "+prettyDate(c.Bday))
 					return
 				}
