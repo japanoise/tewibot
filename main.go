@@ -65,11 +65,17 @@ type BotWaifu struct {
 func (b *BotWaifu) GetName() string { return b.Name }
 func (b *BotWaifu) GetGender() byte { return b.Gender }
 
+type BotCmdPair struct {
+	Cmd   string
+	Reply string
+}
+
 type BotUser struct {
 	Nickname string
 	Gender   byte
 	Waifus   []*BotWaifu
 	Children []*BotWaifu
+	Commands []*BotCmdPair
 	Intro    string
 }
 
@@ -832,6 +838,71 @@ func themeAddOrGet(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func addBotCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	u := Global.Users[m.Author.ID]
+	if len(u.Commands) >= 5 {
+		reply(s, m, "You already have 5 custom commands.")
+		return
+	}
+	words := strings.Split(m.Content, " ")
+	if len(words) > 2 {
+		rply := strings.Join(words[2:], " ")
+		for i, cmd := range u.Commands {
+			if cmd.Cmd == words[1] {
+				u.Commands[i].Reply = rply
+				reply(s, m, fmt.Sprintf("Updated command %s", cmd.Cmd))
+				return
+			}
+		}
+
+		reply(s, m, fmt.Sprintf("Added command %s", words[1]))
+		u.Commands = append(u.Commands, &BotCmdPair{words[1], rply})
+	} else {
+		reply(s, m, "Not enough arguments. Format: &addcmd COMMAND REPLY...")
+	}
+}
+
+func delBotCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	if len(words) > 1 {
+		u := Global.Users[m.Author.ID]
+		for _, delcmd := range words[1:] {
+			done := false
+			for i, cmd := range u.Commands {
+				if delcmd == cmd.Cmd {
+					copy(u.Commands[i:], u.Commands[i+1:])
+					u.Commands[len(u.Commands)-1] = nil
+					u.Commands = u.Commands[:len(u.Commands)-1]
+					done = true
+					reply(s, m, fmt.Sprintf("Custom command %s was deleted", delcmd))					
+					break
+				}
+			}
+			if !done {
+				reply(s, m, fmt.Sprintf("Warning: %s was not deleted (this command is case sensitive)", delcmd))
+			}
+		}
+	} else {
+		reply(s, m, "Please provide one or more commands to delete")
+	}
+}
+
+func lsBotCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	u := Global.Users[m.Author.ID]
+	if len(u.Commands) <= 0 {
+		reply(s, m, "You have no custom commands.")
+	} else {
+		reps := []string{"Your custom commands are:"}
+		for _, cmd := range u.Commands {
+			reps = append(reps, fmt.Sprintf("%s: \"%s\"", cmd.Cmd, cmd.Reply))
+		}
+		reply(s, m, strings.Join(reps, "\n"))
+	}
+}
+
 func help(s *discordgo.Session, m *discordgo.MessageCreate) {
 	words := strings.Split(m.Content, " ")
 	if len(words) > 1 {
@@ -908,6 +979,9 @@ func init() {
 	addCommand(getWaifuPic, "Get an image of your waifu or child from danbooru", "pic")
 	addCommand(setIntro, "Set or display your introduction", "intro")
 	addCommand(themeAddOrGet, "Set or get your waifu or child's theme, e.g. &theme https://www.youtube.com/watch?v=U_CfriU4Cng Miku", "theme")
+	addCommand(addBotCmd, "Add a custom command, e.g. &addcmd !tsun Miku: It's not like I like you or anything, BAKA!", "addcmd")
+	addCommand(delBotCmd, "Delete a custom command, works with multiple commands e.g. &delcmd !yan !tsun !kuu", "delcmd")
+	addCommand(lsBotCmd, "Lists your custom commands", "lscmd")
 	InitGlobal()
 	InitComforts()
 
@@ -1065,6 +1139,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				m.Content, Global.CommandPrefix), " ")[0])]
 			if run != nil {
 				run(s, m)
+			}
+			return
+		}
+	}
+
+	if len(m.Content) > 0 {
+		adduserifne(m)
+		for _, cmd := range Global.Users[m.Author.ID].Commands {
+			if m.Content == cmd.Cmd {
+				reply(s, m, cmd.Reply)
 			}
 		}
 	}
