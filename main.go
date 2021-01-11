@@ -482,13 +482,6 @@ func waifuDel(s *discordgo.Session, m *discordgo.MessageCreate) {
 func childDel(s *discordgo.Session, m *discordgo.MessageCreate) {
 	adduserifne(m)
 	words := strings.Split(m.Content, " ")
-	gen := GenderFemale
-	if strings.Contains(strings.ToLower(words[0]), "son") {
-		gen = GenderMale
-	}
-	if strings.Contains(strings.ToLower(words[0]), "child") {
-		gen = GenderNeuter
-	}
 	if len(words) > 1 {
 		var wname string = strings.Join(words[1:], " ")
 		if Global.Users[m.Author.ID].Children == nil {
@@ -496,7 +489,7 @@ func childDel(s *discordgo.Session, m *discordgo.MessageCreate) {
 		} else {
 			u := Global.Users[m.Author.ID]
 			for i, child := range u.Children {
-				if child.Name == wname && child.Gender == gen {
+				if child.Name == wname {
 					reply(s, m, fmt.Sprintf("Removing %s from %s's children",
 						wname, m.Author.Username))
 					copy(u.Children[i:], u.Children[i+1:])
