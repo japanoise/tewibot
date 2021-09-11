@@ -277,7 +277,7 @@ func getSpouseString(u *BotUser) string {
 				pic += "\nAnniversary: " + waifu.Anni.Format(shortForm)
 			}
 			if !waifu.Bday.IsZero() {
-				pic += "\nBirthday: " + wifu.Bday.Format(shortForm)
+				pic += "\nBirthday: " + waifu.Bday.Format(shortForm)
 			}
 			ret += fmt.Sprintf(
 				"%d) %s %s, %s.%s\n", i+1,
