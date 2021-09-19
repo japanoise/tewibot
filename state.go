@@ -45,6 +45,16 @@ func InitComforts() {
 		fmt.Println(err.Error(), ", using minimal child reverse comforts db for now.")
 		ChildReverseComforts = []string{"_%wn hugs %n_"}
 	}
+	err = LoadComfortsList("pitchcomforts.json", &PitchComforts)
+	if err != nil {
+		fmt.Println(err.Error(), ", using minimal pitch comforts db for now.")
+		PitchComforts = []string{"_%wn hugs %n_"}
+	}
+	err = LoadComfortsList("palecomforts.json", &PaleComforts)
+	if err != nil {
+		fmt.Println(err.Error(), ", using minimal pale comforts db for now.")
+		PaleComforts = []string{"_%wn hugs %n_"}
+	}
 }
 
 func SaveGlobal() {

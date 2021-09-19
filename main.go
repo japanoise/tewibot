@@ -47,6 +47,14 @@ var regexSpouseNB *regexp.Regexp
 var regexSpouseMasc *regexp.Regexp
 var regexSpouseFem *regexp.Regexp
 
+type Quadrant byte
+
+const (
+	QuadFlushed Quadrant = iota
+	QuadPitch
+	QuadPale
+)
+
 type Human interface {
 	GetName() string
 	GetGender() byte
@@ -60,6 +68,7 @@ type BotWaifu struct {
 	Theme   string
 	Anni    time.Time
 	Bday    time.Time
+	Quad    Quadrant
 }
 
 func (b *BotWaifu) GetName() string { return b.Name }
@@ -77,6 +86,7 @@ type BotUser struct {
 	Children []*BotWaifu
 	Commands []*BotCmdPair
 	Intro    string
+	UseQ     bool
 }
 
 func (b *BotUser) GetName() string { return b.Nickname }
@@ -98,6 +108,8 @@ var Usages map[string]string
 var Comforts []string
 var ChildComforts []string
 var ChildReverseComforts []string
+var PaleComforts []string
+var PitchComforts []string
 
 func reply(s *discordgo.Session, m *discordgo.MessageCreate, msg string) {
 	fmt.Printf("me -> %s: %s\n", m.ChannelID, msg)
@@ -260,9 +272,19 @@ func getSpouseString(u *BotUser) string {
 		if !wifu.Bday.IsZero() {
 			pic += "\nBirthday: " + wifu.Bday.Format(shortForm)
 		}
+		spouse := "spouse"
+		if !u.UseQ {
+			spouse = Spouse[wifu.Gender]
+		} else if wifu.Quad == QuadPale {
+			spouse = "moirail (♢)"
+		} else if wifu.Quad == QuadPitch {
+			spouse = "kismesis (♤)"
+		} else {
+			spouse = Spouse[wifu.Gender] + " (♡)"
+		}
 		ret = fmt.Sprintf(
 			"According to the databanks, %s's %s is %s.%s\n",
-			u.Nickname, Spouse[wifu.Gender], wifu.Name, pic)
+			u.Nickname, spouse, wifu.Name, pic)
 	} else {
 		ret = fmt.Sprintf("%s has %d spouses:\n", u.Nickname, len(u.Waifus))
 		for i, waifu := range u.Waifus {
@@ -279,9 +301,19 @@ func getSpouseString(u *BotUser) string {
 			if !waifu.Bday.IsZero() {
 				pic += "\nBirthday: " + waifu.Bday.Format(shortForm)
 			}
+			spouse := "spouse"
+			if !u.UseQ {
+				spouse = Spouse[waifu.Gender]
+			} else if waifu.Quad == QuadPale {
+				spouse = "moirail (♢)"
+			} else if waifu.Quad == QuadPitch {
+				spouse = "kismesis (♤)"
+			} else {
+				spouse = Spouse[waifu.Gender] + " (♡)"
+			}
 			ret += fmt.Sprintf(
 				"%d) %s %s, %s.%s\n", i+1,
-				pp[u.Gender], Spouse[waifu.Gender], waifu.Name, pic)
+				pp[u.Gender], spouse, waifu.Name, pic)
 		}
 	}
 	return ret
@@ -428,6 +460,11 @@ func comfortUser(s *discordgo.Session, m *discordgo.MessageCreate, rev bool, f f
 		if wifu == nil {
 			reply(s, m, fmt.Sprintf("_cuddles %s close_", name))
 		} else {
+			if wifu.Quad == QuadPitch {
+				comforts = PitchComforts
+			} else if wifu.Quad == QuadPale {
+				comforts = PaleComforts
+			}
 			if rev {
 				reply(s, m, pronouns(wifu, u, randoms(comforts)))
 			} else {
@@ -710,22 +747,40 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 	adduserifne(m)
 	words := strings.Split(m.Content, " ")
 	gen := GenderFemale
+	quadrant := QuadFlushed
 	if strings.Contains(strings.ToLower(words[0]), "husbando") {
 		gen = GenderMale
 	}
 	if strings.Contains(strings.ToLower(words[0]), "spouse") {
 		gen = GenderNeuter
 	}
+	if strings.Contains(strings.ToLower(words[0]), "pale") {
+		Global.Users[m.Author.ID].UseQ = true
+		quadrant = QuadPale
+	}
+	if strings.Contains(strings.ToLower(words[0]), "pitch") {
+		Global.Users[m.Author.ID].UseQ = true
+		quadrant = QuadPitch
+	}
+
 	spouse := Spouse[gen]
+	if quadrant == QuadPale {
+		spouse = "moirail"
+	} else if quadrant == QuadPitch {
+		spouse = "kismesis"
+	}
+
 	if len(words) > 1 {
 		var wname string = strings.Join(words[1:], " ")
+		waifu := newWaifu(wname, gen)
+		waifu.Quad = quadrant
 		if Global.Users[m.Author.ID].Waifus == nil {
 			Global.Users[m.Author.ID].Waifus = []*BotWaifu{
-				newWaifu(wname, gen),
+				waifu,
 			}
 		} else {
 			Global.Users[m.Author.ID].Waifus = append(Global.Users[m.Author.ID].Waifus,
-				newWaifu(wname, gen))
+				waifu)
 		}
 		reply(s, m, fmt.Sprintf("Setting %s's %s to %s",
 			m.Author.Username, spouse, wname))
@@ -951,7 +1006,10 @@ func init() {
 	addCommand(bdayReg, "Register a birthday (YYYY-MM-DD)", "bdayreg")
 	addCommand(anni, "Show your anniversary", "anni")
 	addCommand(anniReg, "Register your anniversary (YYYY-MM-DD)", "annireg")
-	addCommand(waifuReg, "Register your waifu with the bot", "waifureg", "husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse")
+	addCommand(waifuReg, "Register your waifu with the bot", "waifureg",
+		"husbandoreg", "setwaifu", "sethusbando", "spousereg", "setspouse",
+		"palewaifureg", "palehusbandoreg", "palespousereg",
+		"pitchwaifureg", "pitchhusbandoreg", "pitchspousereg")
 	addCommand(waifuDel, "Delete a previously registered waifu", "waifudel", "husbandodel", "spousedel")
 	addCommand(childDel, "Delete a previously registered child", "daughterdel", "sondel", "childdel")
 	addCommand(getGender, "Print your (or someone else's) gender", "gender", "getgender")
