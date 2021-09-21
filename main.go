@@ -448,6 +448,7 @@ func comfortUser(s *discordgo.Session, m *discordgo.MessageCreate, rev bool, f f
 	var id string
 	var name string
 	var u *BotUser
+	words := strings.Split(m.Content, " ")
 	if len(m.Mentions) > 0 {
 		id = m.Mentions[0].ID
 		name = m.Mentions[0].Username
@@ -461,6 +462,16 @@ func comfortUser(s *discordgo.Session, m *discordgo.MessageCreate, rev bool, f f
 	} else {
 		name = u.Nickname
 		wifu := f(u)
+		if id == m.Author.ID && len(words) > 1 {
+			var wname string = strings.Join(words[1:], " ")
+			if Global.Users[m.Author.ID].Waifus != nil {
+				for _, waifu := range u.Waifus {
+					if waifu.Name == wname {
+						wifu = waifu
+					}
+				}
+			}
+		}
 		if wifu == nil {
 			reply(s, m, fmt.Sprintf("_cuddles %s close_", name))
 		} else {
