@@ -7,7 +7,7 @@ A Discord bot for waifufriends; the spiritual successor to the lainbot family.
 - Fast and light on resources
 - Setting and getting waifus and children
 - Getting/giving `comfort`s
-- Three genders (male, female, non-binary with singular they) - no misgendering or your money back!
+- Four genders (male, female, non-binary with singular they or it) - no misgendering or your money back!
 - On-line help system - use the `help` command
 - Set your own unique nickname with the bot, independant from your Discord username
 - Remembers your nickname, gender, and family across servers
@@ -39,11 +39,11 @@ A Discord bot for waifufriends; the spiritual successor to the lainbot family.
 Comfort texts are stored in comforts.json. The format string uses pronoun
 substitution ala FBMuck, but with a preceding 'w' for waifu's name & pronouns:
 
-    %a (absolute)       = his, hers, theirs.
-    %s (subjective)     = he, she, they.
-    %o (objective)      = him, her, them.
-    %p (possessive)     = his, her, their.
-    %r (reflexive)      = himself, herself, themself.
+    %a (absolute)       = his, hers, theirs, its.
+    %s (subjective)     = he, she, they, it.
+    %o (objective)      = him, her, them, it.
+    %p (possessive)     = his, her, their, its.
+    %r (reflexive)      = himself, herself, themself, itself.
     %n (player's name)  = Name.
 
 ## Danbooru

@@ -29,18 +29,19 @@ const (
 	GenderNeuter byte = iota
 	GenderMale
 	GenderFemale
+	GenderItIts
 
 	LogR int = 10000
 )
 
-var Spouse = [...]string{"spouse", "hazubando", "waifu"}
-var Child = [...]string{"child", "son", "daughter"}
-var Gender = [...]string{"enby", "male", "female"}
-var pa = [...]string{"theirs", "his", "hers"}
-var ps = [...]string{"they", "he", "she"}
-var po = [...]string{"them", "him", "her"}
-var pp = [...]string{"their", "his", "her"}
-var pr = [...]string{"themself", "himself", "herself"}
+var Spouse = [...]string{"spouse", "hazubando", "waifu", "spouse"}
+var Child = [...]string{"child", "son", "daughter", "child"}
+var Gender = [...]string{"enby", "male", "female", "non-binary"}
+var pa = [...]string{"theirs", "his", "hers", "its"}
+var ps = [...]string{"they", "he", "she", "it"}
+var po = [...]string{"them", "him", "her", "it"}
+var pp = [...]string{"their", "his", "her", "its"}
+var pr = [...]string{"themself", "himself", "herself", "itself"}
 
 var regexWaifuAffection *regexp.Regexp
 var regexSpouseNB *regexp.Regexp
@@ -424,6 +425,9 @@ func setGender(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		if strings.HasPrefix(strings.ToLower(words[1]), "m") {
 			gen = GenderMale
+		}
+		if strings.HasPrefix(strings.ToLower(words[1]), "i") {
+			gen = GenderItIts
 		}
 		u.Gender = gen
 		reply(s, m, fmt.Sprintf("Setting %s's gender to %s", u.Nickname, Gender[gen]))
@@ -1018,7 +1022,7 @@ func init() {
 	addCommand(rcomfort, "Dispense hugs and other niceness to your waifu", "rcomfort", "rhug")
 	addCommand(ccomfort, "Dispense hugs and other niceness from your child", "ccomfort", "dcomfort", "chug", "dhug")
 	addCommand(crcomfort, "Dispense hugs and other niceness to your child", "crcomfort", "drcomfort", "crhug", "drhug")
-	addCommand(setGender, "Set your gender - m, f, x\nThis affects which pronouns the bot will use for you (he, she, they)", "setgender", "genderreg")
+	addCommand(setGender, "Set your gender - m, f, x, i\nThis affects which pronouns the bot will use for you (he, she, they, it)", "setgender", "genderreg")
 	addCommand(addChild, "Register one of your children with the bot", "setchild", "childreg", "setdaughteru", "daughterureg", "setsonfu", "sonfureg")
 	addCommand(getFamily, "Print your (or someone else's) family", "family", "getfamily")
 	addCommand(nickname, "If given a nickname, set your nickname to that. Otherwise, print your nickname.", "nick", "nickname", "setnick", "setnickname")
