@@ -1098,10 +1098,10 @@ func init() {
 	// Let's see you ROTC leeches coming up with regexes even half this good. -- Kona
 	regexWaifuAffection = regexp.MustCompile("^[Ii] ((re+a+l+y+ )*lo+ve|ne+d|wa+nt|a+do+r+e+) (my )?([^.,!?]*)")
 	regexKismesis = regexp.MustCompile("^[Ii] ((re+a+l+y+ )*ha+te) (my )?([^.,!?]*)")
-	regexSpouseKismesis = regexp.MustCompile("ki+sme+si+s+")
-	regexSpouseNB = regexp.MustCompile("spo+u+s+e+|da+te+ma+te+")
-	regexSpouseMasc = regexp.MustCompile("h[au]+[sz]u*bando*|bo+yfri+e+nd+")
-	regexSpouseFem = regexp.MustCompile("wa*i+f[ue]+|gi+r+l+fri+e+nd+")
+	regexSpouseKismesis = regexp.MustCompile("^ki+sme+si+s+$")
+	regexSpouseNB = regexp.MustCompile("^(spo+u+s+e+|da+te+ma+te+)$")
+	regexSpouseMasc = regexp.MustCompile("^(h[au]+[sz]u*bando*|bo+yfri+e+nd+)$")
+	regexSpouseFem = regexp.MustCompile("^(wa*i+f[ue]+|gi+r+l+fri+e+nd+)$")
 }
 
 var logfile *os.File = nil
@@ -1259,12 +1259,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			} else {
 				reply(s, m, fmt.Sprintf("I'm sure %s %ss you too!", ps[kmgender], affectionVerb))
 			}
-		} else if regexSpouseNB.MatchString(spouseOrName) {
-			reply(s, m, fmt.Sprintf("I'm sure they %s you too!", affectionVerb))
-		} else if regexSpouseMasc.MatchString(spouseOrName) {
-			reply(s, m, fmt.Sprintf("I'm sure he %ss you too!", affectionVerb))
-		} else if regexSpouseFem.MatchString(spouseOrName) {
-			reply(s, m, fmt.Sprintf("I'm sure she %ss you too!", affectionVerb))
 		} else {
 			if Global.Users[m.Author.ID].Waifus != nil {
 				u := Global.Users[m.Author.ID]
