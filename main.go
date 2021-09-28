@@ -803,6 +803,36 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func vacillate(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+
+	if len(words) > 1 {
+		var wname string = strings.Join(words[1:], " ")
+		u := Global.Users[m.Author.ID]
+		u.UseQ = true
+		for i, waifu := range u.Waifus {
+			if waifu.Name == wname {
+				if waifu.Quad == QuadFlushed {
+					reply(s, m, fmt.Sprintf(
+						"Aww, looks like someone caught pitch feelings for %s~ ♤", waifu.Name))
+					u.Waifus[i].Quad = QuadPitch
+				} else if waifu.Quad == QuadPitch {
+					reply(s, m, fmt.Sprintf(
+						"Aww, looks like someone caught flushed feelings for %s~ ♡", waifu.Name))
+					u.Waifus[i].Quad = QuadFlushed
+				} else {
+					reply(s, m, "I don't think that quadrant vacillates...")
+				}
+				return
+			}
+		}
+		reply(s, m, "Couldn't find that waifu in your waifu list!")
+	} else {
+		reply(s, m, "Who is vacillating?")
+	}
+}
+
 func newWaifu(name string, gen byte) *BotWaifu {
 	ret := &BotWaifu{}
 	ret.Name = name
@@ -1047,6 +1077,7 @@ func init() {
 	addCommand(themeAddOrGet, "Set or get your waifu or child's theme, e.g. &theme https://www.youtube.com/watch?v=U_CfriU4Cng Miku", "theme")
 	addCommand(addBotCmd, "Add a custom command, e.g. &addcmd !tsun Miku: It's not like I like you or anything, BAKA!", "addcmd")
 	addCommand(delBotCmd, "Delete a custom command, works with multiple commands e.g. &delcmd !yan !tsun !kuu", "delcmd")
+	addCommand(vacillate, "Vacillate a waifu between flushed and pitch (if you don't know what this means, you probably don't want to do it)", "vax", "vacillate")
 	addCommand(lsBotCmd, "Lists your custom commands", "lscmd")
 	InitGlobal()
 	InitComforts()
