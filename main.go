@@ -44,6 +44,8 @@ var pp = [...]string{"their", "his", "her", "its"}
 var pr = [...]string{"themself", "himself", "herself", "itself"}
 
 var regexWaifuAffection *regexp.Regexp
+var regexKismesis *regexp.Regexp
+var regexSpouseKismesis *regexp.Regexp
 var regexSpouseNB *regexp.Regexp
 var regexSpouseMasc *regexp.Regexp
 var regexSpouseFem *regexp.Regexp
@@ -1095,6 +1097,8 @@ func init() {
 
 	// Let's see you ROTC leeches coming up with regexes even half this good. -- Kona
 	regexWaifuAffection = regexp.MustCompile("^[Ii] ((re+a+l+y+ )*lo+ve|ne+d|wa+nt|a+do+r+e+) (my )?([^.,!?]*)")
+	regexKismesis = regexp.MustCompile("^[Ii] ((re+a+l+y+ )*ha+te) (my )?([^.,!?]*)")
+	regexSpouseKismesis = regexp.MustCompile("ki+sme+si+s+")
 	regexSpouseNB = regexp.MustCompile("spo+u+s+e+|da+te+ma+te+")
 	regexSpouseMasc = regexp.MustCompile("h[au]+[sz]u*bando*|bo+yfri+e+nd+")
 	regexSpouseFem = regexp.MustCompile("wa*i+f[ue]+|gi+r+l+fri+e+nd+")
@@ -1222,6 +1226,50 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 				u := Global.Users[m.Author.ID]
 				for _, waifu := range u.Waifus {
 					if waifu.Name == spouseOrName {
+						reply(s, m, fmt.Sprintf("%s %ss you too!", waifu.Name, affectionVerb))
+						return
+					}
+				}
+			}
+		}
+	} else if mat := regexKismesis.FindStringSubmatch(m.Content); mat != nil {
+		adduserifne(m)
+		kmgender := GenderNeuter
+		if Global.Users[m.Author.ID].Waifus != nil {
+			u := Global.Users[m.Author.ID]
+			km := false
+			for _, waifu := range u.Waifus {
+				km = km || waifu.Quad == QuadPitch
+				if waifu.Quad == QuadPitch {
+					kmgender = waifu.Gender
+				}
+			}
+			if !km {
+				return
+			}
+		}
+		affectionVerb := mat[1]
+		spouseOrName := mat[4]
+		if len(spouseOrName) == 0 {
+			return
+		}
+		if regexSpouseKismesis.MatchString(spouseOrName) {
+			if kmgender == GenderNeuter {
+				reply(s, m, fmt.Sprintf("I'm sure %s %s you too!", ps[kmgender], affectionVerb))
+			} else {
+				reply(s, m, fmt.Sprintf("I'm sure %s %ss you too!", ps[kmgender], affectionVerb))
+			}
+		} else if regexSpouseNB.MatchString(spouseOrName) {
+			reply(s, m, fmt.Sprintf("I'm sure they %s you too!", affectionVerb))
+		} else if regexSpouseMasc.MatchString(spouseOrName) {
+			reply(s, m, fmt.Sprintf("I'm sure he %ss you too!", affectionVerb))
+		} else if regexSpouseFem.MatchString(spouseOrName) {
+			reply(s, m, fmt.Sprintf("I'm sure she %ss you too!", affectionVerb))
+		} else {
+			if Global.Users[m.Author.ID].Waifus != nil {
+				u := Global.Users[m.Author.ID]
+				for _, waifu := range u.Waifus {
+					if waifu.Name == spouseOrName && waifu.Quad == QuadPitch {
 						reply(s, m, fmt.Sprintf("%s %ss you too!", waifu.Name, affectionVerb))
 						return
 					}
