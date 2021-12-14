@@ -796,6 +796,15 @@ func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 				waifu,
 			}
 		} else {
+			for idx, wifu := range Global.Users[m.Author.ID].Waifus {
+				if wname == wifu.Name {
+					Global.Users[m.Author.ID].Waifus[idx].Quad = quadrant
+					Global.Users[m.Author.ID].Waifus[idx].Gender = gen
+					reply(s, m, fmt.Sprintf("Updating %s's %s to %s",
+						m.Author.Username, spouse, wname))
+					return
+				}
+			}
 			Global.Users[m.Author.ID].Waifus = append(Global.Users[m.Author.ID].Waifus,
 				waifu)
 		}
