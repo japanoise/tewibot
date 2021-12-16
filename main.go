@@ -1014,16 +1014,14 @@ func help(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if Usages[cmd] == "" {
 			reply(s, m, fmt.Sprintf("The help system doesn't know about %s%s",
 				Global.CommandPrefix, cmd))
+		} else if Commands[cmd] == nil {
+			reply(s, m, Usages[cmd])
 		} else {
 			reply(s, m, fmt.Sprintf("%s%s - %s", Global.CommandPrefix,
 				cmd, Usages[cmd]))
 		}
 	} else {
-		rep := "tewibot - a spiritual successor to the lainbot family of irc bots.\nSupported commands (type &help _command_ for usage text):\n"
-		for key, _ := range Commands {
-			rep += Global.CommandPrefix + key + ", "
-		}
-		reply(s, m, rep)
+		reply(s, m, HelpMenu(Global.CommandPrefix))
 	}
 }
 
@@ -1092,6 +1090,7 @@ func init() {
 	addCommand(lsBotCmd, "Lists your custom commands", "lscmd")
 	InitGlobal()
 	InitComforts()
+	InitHelp()
 
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.StringVar(&AdminID, "a", "", "Admin's Discord ID")
