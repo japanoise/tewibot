@@ -64,14 +64,16 @@ type Human interface {
 }
 
 type BotWaifu struct {
-	Name    string
-	Gender  byte
-	Picture string
-	Tag     string
-	Theme   string
-	Anni    time.Time
-	Bday    time.Time
-	Quad    Quadrant
+	Name      string
+	Gender    byte
+	Picture   string
+	Tag       string
+	Theme     string
+	Anni      time.Time
+	Bday      time.Time
+	Quad      Quadrant
+	Comforts  []string
+	RComforts []string
 }
 
 func (b *BotWaifu) GetName() string { return b.Name }
@@ -483,9 +485,9 @@ func comfortUser(s *discordgo.Session, m *discordgo.MessageCreate, rev bool, f f
 				comforts = PaleComforts
 			}
 			if rev {
-				reply(s, m, pronouns(wifu, u, randoms(comforts)))
+				reply(s, m, pronouns(wifu, u, randoms(append(comforts, wifu.RComforts...))))
 			} else {
-				reply(s, m, pronouns(u, wifu, randoms(comforts)))
+				reply(s, m, pronouns(u, wifu, randoms(append(comforts, wifu.Comforts...))))
 			}
 		}
 	}
@@ -1006,6 +1008,153 @@ func lsBotCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func getWaifuAndComfort(message string) (string, string) {
+	pivot := -1
+	words := strings.Split(message, " ")
+	for idx, word := range words {
+		if word == "COMFORT" {
+			pivot = idx
+		}
+	}
+	if pivot == -1 {
+		return "", ""
+	}
+
+	if pivot >= (len(words) - 1) {
+		return "", ""
+	}
+
+	return strings.Join(words[1:pivot], " "), strings.Join(words[pivot+1:], " ")
+}
+
+func addComfort(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	u := Global.Users[m.Author.ID]
+	waifu, comfort := getWaifuAndComfort(m.Content)
+	if waifu == "" || comfort == "" {
+		reply(s, m, "The format of this command is &addcustomcomfort [waifu name] COMFORT [comfort text]")
+		return
+	}
+	for idx, wifu := range u.Waifus {
+		if waifu == wifu.Name {
+			if len(wifu.Comforts) >= 5 {
+				reply(s, m, "The limit is 5 custom comforts and 5 custom rcomforts per family member.")
+			} else {
+				reply(s, m, "Adding new custom comfort.")
+				u.Waifus[idx].Comforts = append(wifu.Comforts, comfort)
+			}
+			return
+		}
+	}
+	for idx, kiddo := range u.Children {
+		if waifu == kiddo.Name {
+			if len(kiddo.Comforts) >= 5 {
+				reply(s, m, "The limit is 5 custom comforts and 5 custom rcomforts per family member.")
+			} else {
+				reply(s, m, "Adding new custom comfort.")
+				u.Children[idx].Comforts = append(kiddo.Comforts, comfort)
+			}
+			return
+		}
+	}
+}
+
+func customComfort(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	u := Global.Users[m.Author.ID]
+	words := strings.Split(m.Content, " ")
+	if len(words) < 2 {
+		reply(s, m, "Who do you want to comfort you?")
+		return
+	}
+
+	waifu := strings.Join(words[1:], " ")
+	for _, wifu := range u.Waifus {
+		if waifu == wifu.Name {
+			if len(wifu.Comforts) == 0 {
+				reply(s, m, "You need to set some custom comforts first!")
+			} else {
+				reply(s, m, randoms(wifu.Comforts))
+			}
+			return
+		}
+	}
+	for _, kiddo := range u.Children {
+		if waifu == kiddo.Name {
+			if len(kiddo.Comforts) == 0 {
+				reply(s, m, "You need to set some custom comforts first!")
+			} else {
+				reply(s, m, randoms(kiddo.Comforts))
+			}
+			return
+		}
+	}
+}
+
+func addRevComfort(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	u := Global.Users[m.Author.ID]
+	waifu, comfort := getWaifuAndComfort(m.Content)
+	if waifu == "" || comfort == "" {
+		reply(s, m, "The format of this command is &addcustomrcomfort [waifu name] COMFORT [comfort text]")
+		return
+	}
+	for idx, wifu := range u.Waifus {
+		if waifu == wifu.Name {
+			if len(wifu.RComforts) >= 5 {
+				reply(s, m, "The limit is 5 custom comforts and 5 custom rcomforts per family member.")
+			} else {
+				reply(s, m, "Adding new custom rcomfort.")
+				u.Waifus[idx].RComforts = append(wifu.RComforts, comfort)
+			}
+			return
+		}
+	}
+	for idx, kiddo := range u.Children {
+		if waifu == kiddo.Name {
+			if len(kiddo.RComforts) >= 5 {
+				reply(s, m, "The limit is 5 custom comforts and 5 custom rcomforts per family member.")
+			} else {
+				reply(s, m, "Adding new custom rcomfort.")
+				u.Children[idx].RComforts = append(kiddo.RComforts, comfort)
+			}
+			return
+		}
+	}
+}
+
+func customRevComfort(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	u := Global.Users[m.Author.ID]
+	words := strings.Split(m.Content, " ")
+	if len(words) < 2 {
+		reply(s, m, "Who do you want to comfort you?")
+		return
+	}
+
+	waifu := strings.Join(words[1:], " ")
+	for _, wifu := range u.Waifus {
+		if waifu == wifu.Name {
+			if len(wifu.Comforts) == 0 {
+				reply(s, m, "You need to set some custom comforts first!")
+			} else {
+				reply(s, m, randoms(wifu.RComforts))
+			}
+			return
+		}
+	}
+	for _, kiddo := range u.Children {
+		if waifu == kiddo.Name {
+			if len(kiddo.Comforts) == 0 {
+				reply(s, m, "You need to set some custom comforts first!")
+			} else {
+				reply(s, m, randoms(kiddo.RComforts))
+			}
+			return
+		}
+	}
+}
+
 func help(s *discordgo.Session, m *discordgo.MessageCreate) {
 	words := strings.Split(m.Content, " ")
 	if len(words) > 1 {
@@ -1087,6 +1236,10 @@ func init() {
 	addCommand(delBotCmd, "Delete a custom command, works with multiple commands e.g. &delcmd !yan !tsun !kuu", "delcmd")
 	addCommand(vacillate, "Vacillate a waifu between flushed and pitch (if you don't know what this means, you probably don't want to do it)", "vax", "vacillate")
 	addCommand(lsBotCmd, "Lists your custom commands", "lscmd")
+	addCommand(addRevComfort, "Adds a custom reverse comfort. Syntax: &addcustomrcomfort [waifu name] COMFORT [comfort text]", "addcustomrcomfort")
+	addCommand(customRevComfort, "Get given waifu to do a custom reverse comfort", "customrcomfort")
+	addCommand(addComfort, "Adds a custom comfort. Syntax: &addcustomcomfort [waifu name] COMFORT [comfort text]", "addcustomcomfort")
+	addCommand(customComfort, "Get given waifu to do a custom comfort", "customcomfort")
 	InitGlobal()
 	InitComforts()
 	InitHelp()

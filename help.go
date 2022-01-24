@@ -55,6 +55,20 @@ func InitHelp() {
 		"",
 		"Pale and pitch partners have special comfort texts. If you want to vaccilate your kismesis to a flushed quadrant, use the 'vax' command.",
 	}, "\n")
+	Usages["customcomforts"] = strings.Join([]string{
+		"You can add custom comforts to each of your partners and/or kiddos. These will show up alongside regular comforts.",
+		"You can have five comforts each for normal and reverse comforts per partner.",
+		"",
+		"Add a new custom comfort with &addcustomcomfort. The syntax is &addcustomcomfort [waifu name] COMFORT [comfort text];" +
+			" that is, you need to separate your waifu's name and the comfort text with COMFORT in all-caps.",
+		"The same syntax is used to add reverse comforts, with the command &addcustomrcomfort.",
+		"",
+		"For example: &addcustomcomfort Hatsune Miku COMFORT Miku sings 'Triple Baka' for Waifufriend",
+		"",
+		"You can have a partner comfort you only using custom comforts by using &customcomfort and &customrcomfort followed by their name.",
+		"",
+		"For example: &customcomfort Hatsune Miku -> 'Miku sings Triple Baka for Waifufriend'.",
+	}, "\n")
 }
 
 func HelpMenu(prefix string) string {
@@ -65,6 +79,7 @@ func HelpMenu(prefix string) string {
 		"- basic",
 		"- booru",
 		"- customcmd",
+		"- customcomforts",
 		"- quadrants",
 	}, "\n"), prefix, prefix)
 }
