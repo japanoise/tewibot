@@ -588,7 +588,7 @@ func anni(s *discordgo.Session, m *discordgo.MessageCreate) {
 			u := Global.Users[m.Author.ID]
 			for _, waifu := range u.Waifus {
 				if waifu.Name == wname && !waifu.Anni.IsZero() {
-					reply(s, m, "Your anniversary with " + waifu.Name+" is "+prettyDate(waifu.Anni))
+					reply(s, m, "Your anniversary with "+waifu.Name+" is "+prettyDate(waifu.Anni))
 					return
 				}
 			}
@@ -598,7 +598,7 @@ func anni(s *discordgo.Session, m *discordgo.MessageCreate) {
 			u := Global.Users[m.Author.ID]
 			for _, c := range u.Children {
 				if c.Name == wname && !c.Anni.IsZero() {
-					reply(s, m, "Your anniversary with " + c.Name+" is "+prettyDate(c.Anni))
+					reply(s, m, "Your anniversary with "+c.Name+" is "+prettyDate(c.Anni))
 					return
 				}
 			}
@@ -722,7 +722,6 @@ func bdayReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 }
-
 
 func waifuPicAdd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	adduserifne(m)
@@ -980,7 +979,7 @@ func delBotCmd(s *discordgo.Session, m *discordgo.MessageCreate) {
 					u.Commands[len(u.Commands)-1] = nil
 					u.Commands = u.Commands[:len(u.Commands)-1]
 					done = true
-					reply(s, m, fmt.Sprintf("Custom command %s was deleted", delcmd))					
+					reply(s, m, fmt.Sprintf("Custom command %s was deleted", delcmd))
 					break
 				}
 			}

@@ -68,4 +68,3 @@ func HelpMenu(prefix string) string {
 		"- quadrants",
 	}, "\n"), prefix, prefix)
 }
-
