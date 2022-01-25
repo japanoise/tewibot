@@ -1155,6 +1155,110 @@ func customRevComfort(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func lsComfort(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	u := Global.Users[m.Author.ID]
+	words := strings.Split(m.Content, " ")
+	if len(words) < 2 {
+		reply(s, m, "Whose comforts do you want to list?")
+		return
+	}
+
+	waifu := strings.Join(words[1:], " ")
+	var fam *BotWaifu
+	for _, wifu := range u.Waifus {
+		if waifu == wifu.Name {
+			fam = wifu
+		}
+	}
+	for _, kiddo := range u.Children {
+		if waifu == kiddo.Name {
+			fam = kiddo
+		}
+	}
+	if fam == nil {
+		reply(s, m, "I don't know who that is.")
+		return
+	}
+
+	response := make([]string, 0, 12)
+	if len(fam.Comforts) > 0 {
+		response = append(response, fmt.Sprintf("%s's custom comforts are:", waifu))
+		for idx, comfort := range fam.Comforts {
+			response = append(response, fmt.Sprintf("%d: %s", idx, comfort))
+		}
+	} else {
+		response = append(response, fmt.Sprintf("%s does not have custom comforts.", waifu))
+	}
+	response = append(response, "")
+	if len(fam.RComforts) > 0 {
+		response = append(response, fmt.Sprintf("%s's custom reverse comforts are:", waifu))
+		for idx, comfort := range fam.RComforts {
+			response = append(response, fmt.Sprintf("%d: %s", idx, comfort))
+		}
+	} else {
+		response = append(response, fmt.Sprintf("%s does not have custom reverse comforts.", waifu))
+	}
+	reply(s, m, strings.Join(response, "\n"))
+}
+
+func delComfort(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	u := Global.Users[m.Author.ID]
+	words := strings.Split(m.Content, " ")
+	if len(words) < 3 {
+		reply(s, m, "Which comfort do you want to delete? From which family member?")
+		return
+	}
+
+	numberWord := words[1]
+	number, err := strconv.Atoi(numberWord)
+	if err != nil {
+		reply(s, m, fmt.Sprint("err is not a number: %v", err))
+		return
+	} else if number < 0 {
+		reply(s, m, "Number must be at least 0.")
+		return
+	}
+
+	waifu := strings.Join(words[2:], " ")
+	var fam *BotWaifu
+	for idx, wifu := range u.Waifus {
+		if waifu == wifu.Name {
+			fam = u.Waifus[idx]
+		}
+	}
+	for idx, kiddo := range u.Children {
+		if waifu == kiddo.Name {
+			fam = u.Children[idx]
+		}
+	}
+	if fam == nil {
+		reply(s, m, "I don't know who that is.")
+		return
+	}
+
+	if strings.Contains(strings.ToLower(words[0]), "rcomfort") {
+		if number >= len(fam.RComforts) {
+			reply(s, m, "That reverse comfort does not exist.")
+			return
+		}
+		reply(s, m, fmt.Sprintf("Deleting reverse comfort %d (%s)", number, fam.RComforts[number]))
+		copy(fam.RComforts[number:], fam.RComforts[number+1:])
+		fam.RComforts[len(fam.RComforts)-1] = ""
+		fam.RComforts = fam.RComforts[:len(fam.RComforts)-1]
+	} else {
+		if number >= len(fam.Comforts) {
+			reply(s, m, "That comfort does not exist.")
+			return
+		}
+		reply(s, m, fmt.Sprintf("Deleting comfort %d (%s)", number, fam.Comforts[number]))
+		copy(fam.Comforts[number:], fam.Comforts[number+1:])
+		fam.Comforts[len(fam.Comforts)-1] = ""
+		fam.Comforts = fam.Comforts[:len(fam.Comforts)-1]
+	}
+}
+
 func help(s *discordgo.Session, m *discordgo.MessageCreate) {
 	words := strings.Split(m.Content, " ")
 	if len(words) > 1 {
@@ -1240,6 +1344,8 @@ func init() {
 	addCommand(customRevComfort, "Get given waifu to do a custom reverse comfort", "customrcomfort")
 	addCommand(addComfort, "Adds a custom comfort. Syntax: &addcustomcomfort [waifu name] COMFORT [comfort text]", "addcustomcomfort")
 	addCommand(customComfort, "Get given waifu to do a custom comfort", "customcomfort")
+	addCommand(lsComfort, "List custom comforts for given family member", "lscomfort")
+	addCommand(delComfort, "Delete given custom comfort for given family member", "delcomfort", "delrcomfort")
 	InitGlobal()
 	InitComforts()
 	InitHelp()

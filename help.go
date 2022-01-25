@@ -68,6 +68,8 @@ func InitHelp() {
 		"You can have a partner comfort you only using custom comforts by using &customcomfort and &customrcomfort followed by their name.",
 		"",
 		"For example: &customcomfort Hatsune Miku -> 'Miku sings Triple Baka for Waifufriend'.",
+		"",
+		"Use &lscomfort [waifu name] to list your custom comforts and &delcomfort [number] [waifu name] to delete them.",
 	}, "\n")
 }
 
