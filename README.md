@@ -17,11 +17,11 @@ A Discord bot for waifufriends; the spiritual successor to the lainbot family.
 - Add pictures of your family to the bot
 - Get a random image from Danbooru, or request a picture of a family member from Danbooru
 - Get the bot to introduce you to newcomers
+- Custom comforts
 
 ## plans
 
 - Quotes database
-- Custom comforts
 - Steal some features from lainbot forks
 - The usual bot features (reminders, memos, weather etc.)
 
