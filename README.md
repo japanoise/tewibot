@@ -55,3 +55,10 @@ enter these into `waifus.json`.
 Having done that, test out the functionality by using the `&danbooru tag`
 command. If you have family members, you can add a tag to be associated with
 them using `&tag tag name` and fetch pictures using the `&pic` command.
+
+## Forks
+
+- [EmiBot](https://github.com/EmiSu9999/EmiBot) is EmiSu9999's fork of Tewibot.
+  It's broadly similar but more dialled towards usage in r/waifuism's Discord.
+- I'm told that at some point a fork of Tewibot called Reisenbot was running in
+  /mai/'s Discord.
