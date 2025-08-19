@@ -2,7 +2,7 @@ module github.com/japanoise/tewibot
 
 go 1.18
 
-require github.com/bwmarrin/discordgo v0.28.1
+require github.com/bwmarrin/discordgo v0.29.0
 
 require (
 	github.com/gorilla/websocket v1.4.2 // indirect
