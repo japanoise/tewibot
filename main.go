@@ -340,7 +340,7 @@ func getWaifu(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func getChildString(u *BotUser, child *BotWaifu) string {
+func getChildString(u *BotUser, child *BotWaifu, i int) string {
 	pic := ""
 	if child.Picture != "" {
 		pic = "\nPicture: " + child.Picture
@@ -354,9 +354,14 @@ func getChildString(u *BotUser, child *BotWaifu) string {
 	if !child.Bday.IsZero() {
 		pic += "\nBirthday: " + child.Bday.Format(shortForm)
 	}
+	if i >= 0 {
+		return fmt.Sprintf(
+			"\n%d) %s %s, %s.%s",
+			i+1, pp[u.Gender], Child[child.Gender], child.Name, pic)
+	}
 	return fmt.Sprintf(
-		"\n%s %s, %s.%s",
-		pp[u.Gender], Child[child.Gender], child.Name, pic)
+		"%s has one %s, %s.%s",
+		u.Nickname, Child[child.Gender], child.Name, pic)
 }
 
 func getFamily(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -376,10 +381,12 @@ func getFamily(s *discordgo.Session, m *discordgo.MessageCreate) {
 			ret += fmt.Sprintf("Looks like %s doesn't have any children...", u.Nickname)
 		} else if len(u.Children) == 0 {
 			ret += fmt.Sprintf("Looks like %s doesn't have any children...", u.Nickname)
+		} else if len(u.Children) == 1 {
+			ret += getChildString(u, u.Children[0], -1)
 		} else {
 			ret += fmt.Sprintf("%s's children are:", u.Nickname)
-			for _, child := range u.Children {
-				ret += getChildString(u, child)
+			for i, child := range u.Children {
+				ret += getChildString(u, child, i)
 			}
 		}
 		reply(s, m, ret)
