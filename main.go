@@ -768,6 +768,37 @@ func waifuPicAdd(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
+func waifuPicDel(s *discordgo.Session, m *discordgo.MessageCreate) {
+	adduserifne(m)
+	words := strings.Split(m.Content, " ")
+	if len(words) > 1 {
+		var wname string = strings.Join(words[1:], " ")
+		if Global.Users[m.Author.ID].Waifus != nil {
+			u := Global.Users[m.Author.ID]
+			for _, waifu := range u.Waifus {
+				if waifu.Name == wname {
+					reply(s, m, fmt.Sprintf("Deleting %s's picture",
+						wname))
+					waifu.Picture = ""
+					return
+				}
+			}
+		}
+
+		if Global.Users[m.Author.ID].Children != nil {
+			u := Global.Users[m.Author.ID]
+			for _, c := range u.Children {
+				if c.Name == wname {
+					reply(s, m, fmt.Sprintf("Deleting %s's picture",
+						wname))
+					c.Picture = ""
+					return
+				}
+			}
+		}
+	}
+}
+
 func waifuReg(s *discordgo.Session, m *discordgo.MessageCreate) {
 	adduserifne(m)
 	words := strings.Split(m.Content, " ")
@@ -1338,6 +1369,7 @@ func init() {
 	addCommand(help, "Access the on-line help system", "help", "usage", "sos")
 	addCommand(adminInfo, "Print information about the admin", "admin")
 	addCommand(waifuPicAdd, "Add a picture to your waifu; e.g. &picadd http://i.imgur.com/Gqf1rGi.jpg Miku", "picadd")
+	addCommand(waifuPicDel, "Delete a picture of your waifu; e.g. &picdel Miku", "picdel")
 	addCommand(danbooruPic, "Fetch an image with the given tag from danbooru", "danbooru")
 	addCommand(waifuTagAdd, "Set your child or waifu's tag to use when searching danbooru", "tag")
 	addCommand(getWaifuPic, "Get an image of your waifu or child from danbooru", "pic")
